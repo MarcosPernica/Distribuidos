@@ -1,10 +1,11 @@
 #ifndef BASEDEDATOS_H_
 #define BASEDEDATOS_H_
 #include "../entidades.h"
+#include <vector>
 
 int loginUser(user user);
 
-sala* obtenerNombresSalas();
+std::vector<sala> obtenerNombresSalas();
 
 asientos obtenerAsientos(sala sala);
 
