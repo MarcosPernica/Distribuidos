@@ -1,7 +1,6 @@
-#include "administradorCliente.h"
+#include "cinehijo.h"
 #include "ipc/cola.h"
-#include "mensajes/mensajes.h"
-#include "common/common.h"
+#include "common.h"
 
 void procesarMensaje(mensaje recibido, mensaje * respuesta){
 	switch(recibido.tipoMensaje)
@@ -24,7 +23,7 @@ void administrarCliente(login login){
 	int colaId = obtenerCola(COLA_RECEPCION_CINE);
 	while (conectado)
 	{
-		if (recibirMensaje(colaId,pid,(void*)msg,sizeof(msg)) == -1)
+		if (recibirMensaje(colaId,pid,(void*)&msg,sizeof(msg)) == -1)
 		{
 			//handle error
 			break;
@@ -32,7 +31,7 @@ void administrarCliente(login login){
 		mensaje respuesta;
 		respuesta.mtype = pid;
 		procesarMensaje(msg,&respuesta);
-		if (enviarMensaje(colaId,(void*)respuesta,sizeof(respuesta)) == -1)
+		if (enviarMensaje(colaId,(void*)&respuesta,sizeof(respuesta)) == -1)
 		{
 			//handle error
 			break;

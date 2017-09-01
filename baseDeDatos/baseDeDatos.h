@@ -1,8 +1,8 @@
 #ifndef BASEDEDATOS_H_
 #define BASEDEDATOS_H_
-#include "entidades.h"
+#include "../entidades.h"
 
-int login(user user);
+int loginUser(user user);
 
 sala* obtenerNombresSalas();
 

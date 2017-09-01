@@ -1,16 +1,17 @@
 #include <unistd.h>
 #include <sys/wait.h>
 #include "ipc/cola.h"
-#include "common/common.h"
-#include "mensajes/mensajes.h"
-#include "administradorCliente.h"
+#include "common.h"
+#include "mensajes.h"
+#include "cinehijo.h"
+#include "baseDeDatos/baseDeDatos.h"
 
 int servidorEstaVivo(){
 	//TODO exit with signal
 	return 1;
 }
 
-int main(int argc,char* argv)
+int main(int argc,char** argv)
 {
 	//initalize
 	int hijos = 0;
@@ -24,7 +25,7 @@ int main(int argc,char* argv)
 		}
 
 		loginResponse response;
-		if (login(leido.l))
+		if (loginUser(leido.l.user))
 		{
 			if (fork() == 0){
 				administrarCliente(leido.l);

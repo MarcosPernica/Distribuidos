@@ -7,7 +7,7 @@ int crearSem(int id,  int initialValue)
 	{
 		return clave;
 	}
-	int semId = semget(clave, 1, IPC_CREAT | IPC_EXEC | 0666 );
+	int semId = semget(clave, 1, IPC_CREAT | IPC_EXCL | 0666 );
 	if( semId == -1 )
 	{
 		return semId;

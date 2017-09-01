@@ -1,32 +1,32 @@
 #ifndef ENTIDADES
 #define ENTIDADES
 
-struct {
+struct user {
 	char nombre[20];
 	char password[20];
-} typedef user;
+};
 
-struct {
+struct asiento{
 	int x;
 	int y;
 	int length;
 	char nombre[4];
-} asiento;
+};
 
-struct {
+struct asientos {
 	int totalAsientos;
 	asiento asientos[10];
-} asientos;
+};
 
-struct {
+struct sala{
 	int length;
 	char sala[20];
-} typedef sala;
+};
 
-struct {
+struct salas{
 	int totalSalas;
 	sala salas[20];
-} typedef salas;
+};
 
 
 #endif
