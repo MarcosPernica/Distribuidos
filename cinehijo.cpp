@@ -13,6 +13,9 @@ void procesarMensaje(mensaje recibido, mensaje * respuesta){
 			break;
 		case FINALIZAR_COMPRA:
 			break;
+		default:
+			break;
+			//bad msg
 	}
 }
 

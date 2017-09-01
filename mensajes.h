@@ -6,14 +6,14 @@
 
 #define LOGIN 1
 #define LOGIN_RESPONSE 2
+
 #define PEDIR_SALAS 3
 #define ELEGIR_SALA 4
 #define ELEGIR_ASIENTO 5
 #define FINALIZAR_COMPRA 6
-#define ENTRO_A_SALA 7
-#define ASIENTO_RESERVADO 8
-#define ASIENTO_COMPRADO 9
-#define SALIO_DE_SALA 10
+
+#define INTERACCION_SALA 7
+#define INTERACCION_ASIENTO 8
 
 //mensajes cliente-cine
 struct login {

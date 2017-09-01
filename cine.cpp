@@ -4,6 +4,7 @@
 #include "common.h"
 #include "mensajes.h"
 #include "cinehijo.h"
+#include "administrador.h"
 #include "baseDeDatos/baseDeDatos.h"
 
 int servidorEstaVivo(){
@@ -16,11 +17,16 @@ int main(int argc,char** argv)
 	//initalize
 	int hijos = 0;
 	int colaLogin = obtenerCola(COLA_LOGIN_CINE);
+
+	if (fork() == 0){
+		correrAdministrador();
+	}
+
 	while (servidorEstaVivo()){
 		mensaje leido;
 		if (recibirMensaje(colaLogin,LOGIN_TYPE,(void *)&leido,sizeof(leido)) == -1 )
 		{
-			//TODO handle mensaje
+			//TODO handle error
 			break;
 		}
 
@@ -39,9 +45,11 @@ int main(int argc,char** argv)
 		loginResponse.mtype = leido.l.id;
 		loginResponse.tipoMensaje = LOGIN_RESPONSE;
 		loginResponse.lresponse = response;
-		enviarMensaje(colaLogin,(void*)&loginResponse,sizeof(loginResponse));
+		if (enviarMensaje(colaLogin,(void*)&loginResponse,sizeof(loginResponse)) == -1){
+			//TODO handle error
+		}
 	}
-	for (int i = 0; i < hijos; i++){
+	for (int i = 0; i < hijos + 1; i++){
 		wait(NULL);
 	}
 	//destory all
