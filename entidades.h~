@@ -14,7 +14,7 @@ struct asiento{
 	int x;
 	int y;
 	int length;
-	char nombre[LONGITUDMAXNOMBRE];
+	char nombre[4];
 };
 
 struct asientos {

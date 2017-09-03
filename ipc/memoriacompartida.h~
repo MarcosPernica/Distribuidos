@@ -6,7 +6,6 @@
 #define MEMERRORCREACION -2
 #define MEMERRRORMAPEO -3
 #define MEMERRORDESTRUIR -4
-#define MEMERRORYACREADA -5
 #define MEMOK 0
 
 struct cmpMem
