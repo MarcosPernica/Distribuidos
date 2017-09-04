@@ -1,14 +1,25 @@
 CC = g++
 DEBUG = -g
-COMMON_DEPENDENCIES = common.h mensajes.h entidades.h mensajes.h ipc/cola.h ipc/semaforo.h ipc/memoriacompartida.h
-SRCS= cola.cpp semaforo.cpp memoriacompartida.cpp baseDeDatos.cpp cinehijo.cpp  cine.cpp administrador.cpp
-OBJS=$(subst .cpp,.o,$(SRCS))
 
-cine: $(OBJS)
-	$(CC) $(DEBUG) -o cine $(OBJS)
-	if [ ! -d ./build/ ]; then mkdir ./build/; fi
-	mv *.o ./build/
+COMMON_DEPENDENCIES = common.h mensajes.h entidades.h mensajes.h ipc/cola.h ipc/semaforo.h ipc/memoriacompartida.h ipc/senal.h
+COMMON_SRCS= cola.cpp semaforo.cpp memoriacompartida.cpp senal.cpp
 
+CINE_SRCS= $(COMMON_SRCS) baseDeDatos.cpp cinehijo.cpp  cine.cpp administrador.cpp
+CLIENT_SRCS= $(COMMON_SRCS) clienteAsinc.cpp cliente.cpp
+
+CINE_OBJS=$(subst .cpp,.o,$(CINE_SRCS))
+CLIENT_OBJS= $(subst .cpp,.o,$(CLIENT_SRCS))
+
+client: $(CLIENT_OBJS)
+	$(CC) $(DEBUG) -o client $(CLIENT_OBJS)
+	if [ ! -d ./build/client/ ]; then mkdir -p ./build/client; fi
+	mv *.o ./build/client/
+	
+cine: $(CINE_OBJS)
+	$(CC) $(DEBUG) -o cine $(CINE_OBJS)
+	if [ ! -d ./build/cine/ ]; then mkdir -p ./build/cine; fi
+	mv *.o ./build/cine/
+#--CINE---
 cine.o: cine.cpp cinehijo.h $(COMMON_DEPENDENCIES) baseDeDatos/baseDeDatos.h administrador.h
 	$(CC) $(DEBUG) -c cine.cpp
 
@@ -20,7 +31,17 @@ baseDeDatos.o:  baseDeDatos/baseDeDatos.cpp entidades.h baseDeDatos/baseDeDatos.
 
 administrador.o: administrador.cpp administrador.h $(COMMON_DEPENDENCIES) 
 	$(CC) $(DEBUG) -c administrador.cpp
+#-----
 
+#--CLIENTE--
+cliente.o: cliente.cpp clienteAsinc.h $(COMMON_DEPENDENCIES)
+	$(CC) $(DEBUG) -c cliente.cpp
+
+clienteAsinc.o: clienteAsinc.cpp clienteAsinc.h $(COMMON_DEPENDENCIES)
+	$(CC) $(DEBUG) -c clienteAsinc.cpp
+#------
+
+#---COMMON---
 cola.o: ipc/cola.cpp ipc/cola.h
 	$(CC) $(DEBUG) -c ipc/cola.cpp
 
@@ -29,7 +50,18 @@ semaforo.o: ipc/semaforo.cpp ipc/semaforo.h
 
 memoriacompartida.o: ipc/memoriacompartida.cpp ipc/memoriacompartida.h
 	$(CC) $(DEBUG) -c ipc/memoriacompartida.cpp
+	
+senal.o: ipc/senal.cpp ipc/senal.h
+	$(CC) $(DEBUG) -c ipc/senal.cpp
+		
+cleanCliente:
+	if [ -d ./build/client/ ]; then rm -R ./build/client; fi
+	if [ -f client ]; then rm client; fi
 
-clean:
-	rm -f $(OBJS)
+cleanCine:
+	if [ -d ./build/cine/ ]; then rm -R ./build/cine/; fi
+	if [ -f cine ]; then rm cine; fi
+	
+clean: cleanCliente cleanCine
+	rm -f *.o
 
