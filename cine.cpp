@@ -63,6 +63,7 @@ int main(int argc,char** argv)
 		} else {
 			response.success = 0;
 		}
+
 		mensaje loginResponse;
 		loginResponse.mtype = leido.l.id;
 		loginResponse.tipoMensaje = LOGIN_RESPONSE;

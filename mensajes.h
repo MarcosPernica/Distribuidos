@@ -9,11 +9,8 @@
 
 #define PEDIR_SALAS 3
 #define ELEGIR_SALA 4
-#define ELEGIR_ASIENTO 5
+#define INTERACCION_ASIENTO 5
 #define FINALIZAR_COMPRA 6
-
-#define INTERACCION_SALA 7
-#define INTERACCION_ASIENTO 8
 
 //mensajes cliente-cine
 struct login {
@@ -30,30 +27,19 @@ struct pedirSalas{
 };
 
 struct elegirSala{
-	int entrar;
-	struct sala sala;
+	int userid;
+	int salaid;
 };
 
 struct asientoSeleccionado{
-	int selecciono;
+	int userid;
+	int selecciono; //reserva o saca reserva
 	struct asiento asiento;
 };
 
 struct finalizarCompra {
+	int userid;
 	int compro;
-};
-
-//mensajes cine-admin
-struct interaccionSala {
-	int pid;
-	int entro;
-	struct sala sala;
-};
-
-struct asientoPedido {
-	int pid;
-	int accion; //reservo,compro,libero
-	struct asiento asiento;
 };
 
 struct mensaje{
@@ -66,10 +52,6 @@ struct mensaje{
 		struct elegirSala salaE;
 		struct asientoSeleccionado asientoS;
 		struct finalizarCompra fCompra;
-
-		struct interaccionSala sala;
-		struct asientoPedido aPedido;
-
 	};
 };
 

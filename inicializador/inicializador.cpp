@@ -1,7 +1,7 @@
 #include "ipc/cola.h"
 #include "ipc/semaforo.h"
 #include "ipc/memoriacompartida.h"
-#include "common/common.h"
+#include "../common.h"
 
 int main(int argc, char* argv)
 {

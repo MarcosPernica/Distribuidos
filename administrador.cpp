@@ -13,11 +13,16 @@ void terminarAdmin(int sigint){
 
 int procesarMensaje(mensaje recibido, int colaEnvio){
 	mensaje respuesta;
+
 	switch(recibido.tipoMensaje)
 		{
-			case INTERACCION_SALA:
+			case PEDIR_SALAS:
+				break;
+			case ELEGIR_SALA:
 				break;
 			case INTERACCION_ASIENTO:
+				break;
+			case FINALIZAR_COMPRA:
 				break;
 			default:
 				break;

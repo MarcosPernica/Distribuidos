@@ -21,9 +21,41 @@ int cmpMemCrear(struct cmpMem &memoria, size_t tamaño, int idMemoria)
 	if(clave == -1)
 		return MEMERRORTOK;
 
-	int id = shmget(clave, tamaño, IPC_CREAT | 0666);
+	int id = shmget(clave, tamaño, IPC_CREAT | IPC_EXCL | 0666);
 
 	if(id == -1)	
+		return MEMERRORCREACION;
+
+	memoria.id = id;
+
+	void *mem = shmat(memoria.id, NULL, 0);
+
+	if(mem == (void*)-1)
+		return MEMERRORMAPEO;
+
+	memoria.memoria = mem;
+	memoria.tamaño = tamaño;
+
+	return MEMOK;
+}
+
+int cmpMemObtener(struct cmpMem &memoria, size_t tamaño, int idMemoria)
+{
+	if(memoria.memoria != NULL)
+		return MEMERRORYACREADA;
+
+	memoria.id = -1;
+	memoria.memoria = NULL;
+	memoria.tamaño = 0;
+
+	key_t clave = ftok(RUTAMEMORIACOMPARTIDA, idMemoria);
+
+	if(clave == -1)
+		return MEMERRORTOK;
+
+	int id = shmget(clave, 0, IPC_CREAT | 0666);
+
+	if(id == -1)
 		return MEMERRORCREACION;
 
 	memoria.id = id;

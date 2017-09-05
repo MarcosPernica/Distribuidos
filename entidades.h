@@ -10,26 +10,31 @@ struct user {
 	char password[LONGITUDMAXNOMBRE];
 };
 
+struct reserva
+{
+	char nombre[LONGITUDMAXNOMBRE];
+	char estado;
+	asiento asiento;
+};
+
 struct asiento{
 	int x;
 	int y;
-	int length;
-	char nombre[LONGITUDMAXNOMBRE];
 };
 
 struct asientos {
 	int totalAsientos;
-	asiento asientos[CANTIDADMAXASIENTOS];
+	reserva reservas[CANTIDADMAXASIENTOS];
 };
 
 struct sala{
-	int length;
-	char sala[LONGITUDMAXNOMBRE];
+	asientos asientos;
+	int id;
 };
 
 struct salas{
 	int totalSalas;
-	sala salas[CANTIDADMAXSALAS];
+	int numero[CANTIDADMAXSALAS];
 };
 
 

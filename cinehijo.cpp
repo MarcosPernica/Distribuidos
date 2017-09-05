@@ -10,23 +10,6 @@ void terminarHijo(int sigint){
 	hijo_vivo = 1;
 }
 
-void procesarMensaje(mensaje recibido, mensaje * respuesta){
-	switch(recibido.tipoMensaje)
-	{
-		case PEDIR_SALAS:
-			break;
-		case ELEGIR_SALA:
-			break;
-		case ELEGIR_ASIENTO:
-			break;
-		case FINALIZAR_COMPRA:
-			break;
-		default:
-			break;
-			//bad msg
-	}
-}
-
 void administrarCliente(login login){
 	if (registrarSenal(SIGINT,terminarHijo) == -1){
 		printf("Hijo: error al registrar senal");
@@ -46,6 +29,9 @@ void administrarCliente(login login){
 			exit(1);
 		}
 
+	int colaAdmin = obtenerCola(COLA_RECEPCION_ADMIN);
+	int colaEnvioAdmin = obtenerCola(COLA_ENVIO_ADMIN);
+
 	while (hijo_vivo == 0)
 	{
 		if (recibirMensaje(colaId,pid,(void*)&msg,sizeof(msg)) == -1)
@@ -55,8 +41,9 @@ void administrarCliente(login login){
 			break;
 		}
 		mensaje respuesta;
-		respuesta.mtype = pid;
-		procesarMensaje(msg,&respuesta);
+		enviarMensaje(colaAdmin,(void*)&msg,sizeof(msg));
+		recibirMensaje(colaEnvioAdmin,pid,(void*)respuesta,sizeof(respuesta));
+
 		if (enviarMensaje(colaEnvio,(void*)&respuesta,sizeof(respuesta)) == -1)
 		{
 			//handle error
@@ -64,4 +51,5 @@ void administrarCliente(login login){
 			break;
 		}
 	}
+	exit(0);
 }
