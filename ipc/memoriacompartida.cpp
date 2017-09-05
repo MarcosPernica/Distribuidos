@@ -112,7 +112,7 @@ int cmpMemLeer(struct cmpMem &memoria, void* buffer)
 int cmpMemEscribir(struct cmpMem &memoria, void* buffer)
 {
 	if(memoria.memoria == NULL)
-		return MEMERRORLECTURA;
+		return MEMERRORESCRITURA;
 	
 	memcpy(memoria.memoria, buffer, memoria.tamaño);
 
