@@ -1,7 +1,7 @@
 #ifndef MEMORIACOMPARTIDA
 #define MEMORIACOMPARTIDA
 
-#include <stdio.h>
+#include <stdio>
 
 #define RUTAMEMORIACOMPARTIDA "/bin/bash"
 #define MEMERRORTOK -1

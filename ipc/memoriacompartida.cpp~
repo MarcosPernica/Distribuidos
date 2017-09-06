@@ -7,21 +7,21 @@
 #include <string.h>
 
 
-int cmpMemCrear(struct cmpMem &memoria, size_t tamano, int idMemoria)
+int cmpMemCrear(struct cmpMem &memoria, size_t tamaño, int idMemoria)
 {
 	if(memoria.memoria != NULL)
 		return MEMERRORYACREADA;
 
 	memoria.id = -1;
 	memoria.memoria = NULL;
-	memoria.tamano = 0;
+	memoria.tamaño = 0;
 
 	key_t clave = ftok(RUTAMEMORIACOMPARTIDA, idMemoria);
 
 	if(clave == -1)
 		return MEMERRORTOK;
 
-	int id = shmget(clave, tamano, IPC_CREAT | IPC_EXCL | 0666);
+	int id = shmget(clave, tamaño, IPC_CREAT | IPC_EXCL | 0666);
 
 	if(id == -1)	
 		return MEMERRORCREACION;
@@ -34,19 +34,19 @@ int cmpMemCrear(struct cmpMem &memoria, size_t tamano, int idMemoria)
 		return MEMERRORMAPEO;
 
 	memoria.memoria = mem;
-	memoria.tamano = tamano;
+	memoria.tamaño = tamaño;
 
 	return MEMOK;
 }
 
-int cmpMemObtener(struct cmpMem &memoria, size_t tamano, int idMemoria)
+int cmpMemObtener(struct cmpMem &memoria, size_t tamaño, int idMemoria)
 {
 	if(memoria.memoria != NULL)
 		return MEMERRORYACREADA;
 
 	memoria.id = -1;
 	memoria.memoria = NULL;
-	memoria.tamano = 0;
+	memoria.tamaño = 0;
 
 	key_t clave = ftok(RUTAMEMORIACOMPARTIDA, idMemoria);
 
@@ -66,7 +66,7 @@ int cmpMemObtener(struct cmpMem &memoria, size_t tamano, int idMemoria)
 		return MEMERRORMAPEO;
 
 	memoria.memoria = mem;
-	memoria.tamano = tamano;
+	memoria.tamaño = tamaño;
 
 	return MEMOK;
 }
@@ -86,7 +86,7 @@ int cmpMemDestruir(struct cmpMem &memoria)
 		else
 		{
 			memoria.memoria = NULL;
-			memoria.tamano = 0;
+			memoria.tamaño = 0;
 			
 		}
 	}
@@ -104,7 +104,7 @@ int cmpMemLeer(struct cmpMem &memoria, void* buffer)
 	if(memoria.memoria == NULL)
 		return MEMERRORLECTURA;
 	
-	memcpy(buffer, memoria.memoria, memoria.tamano);
+	memcpy(buffer, memoria.memoria, memoria.tamaño);
 
 	return MEMOK;
 }
@@ -114,7 +114,7 @@ int cmpMemEscribir(struct cmpMem &memoria, void* buffer)
 	if(memoria.memoria == NULL)
 		return MEMERRORESCRITURA;
 	
-	memcpy(memoria.memoria, buffer, memoria.tamano);
+	memcpy(memoria.memoria, buffer, memoria.tamaño);
 
 	return MEMOK;
 }

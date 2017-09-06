@@ -31,7 +31,7 @@ struct reserva
 typedef reserva asientos[CANTIDADMAXASIENTOS][CANTIDADMAXASIENTOS];
 
 struct sala{
-	asientos estadoAsientos;
+	asientos asientos;
 	int id;
 };
 

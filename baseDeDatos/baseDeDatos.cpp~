@@ -53,8 +53,8 @@ struct salas dbObtenerSalas(const struct db &db) const
 	return salas;
 }
 
-asientos dbObtenerAsientosSala(const struct db &db, unsigned int idSala) const
+struct asientos dbObtenerAsientosSala(const struct db &db, unsigned int idSala) const
 {
-	return db.estadoAsientosEnSalas[idSala]; 
-
+	if(idSala < CANTIDADMAXSALAS)
+		return db.estadoAsientosEnSalas[idSala]; 
 }

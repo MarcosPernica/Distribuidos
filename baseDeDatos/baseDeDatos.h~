@@ -7,7 +7,7 @@
 
 struct db
 {	//Arreglo tridimensional (Numero de sala, Numero de fila, Numero ded columna)
-	struct reserva estadoAsientosEnSalas[CANTIDADMAXSALAS][CANTIDADMAXASIENTOS][CANTIDADMAXASIENTOS];
+	struct reserva estadoAsientosEnSalas [CANTIDADMAXSALAS][CANTIDADMAXASIENTOS][CANTIDADMAXASIENTOS];
 	unsigned int cantidadSalas;
 }
 
