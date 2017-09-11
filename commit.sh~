@@ -1,4 +1,0 @@
-rm *.h~
-rm *.cpp~
-rm makefile~
-git add --a
