@@ -204,13 +204,7 @@ static bool maquinaEstadosCliente(int colaEnvio, int colaRecepcion, int colaResp
 		{
 			eligioCerrar = mostrarMensajeError();
 			continue;
-		}
-
-		//Elige los asientos
-
-		elegirAsientos()
-
-			
+		}	
 	}
 	
 }

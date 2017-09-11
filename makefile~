@@ -1,5 +1,5 @@
 CC = g++
-DEBUG = -g -std=c++11
+DEBUG = -g std=c++11
 
 COMMON_DEPENDENCIES = common.h mensajes.h entidades.h mensajes.h ipc/cola.h ipc/semaforo.h ipc/memoriacompartida.h ipc/senal.h baseDeDatos/baseDeDatos.h
 COMMON_SRCS= cola.cpp semaforo.cpp memoriacompartida.cpp senal.cpp

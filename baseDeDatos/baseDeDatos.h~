@@ -42,6 +42,6 @@ const asientos &dbObtenerAsientosSala(const struct db &db, unsigned int idSala);
 
 //Obtiene los usuarios en una sala
 
-std::vector<unsigned int> dbObtenerUsuariosSala(const struct db &db, unsigned int idSala);  
+std::vector dbObtenerUsuariosSala(const struct db &db, unsigned int idSala);  
 
 #endif 
