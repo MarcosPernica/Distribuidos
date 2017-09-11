@@ -15,8 +15,8 @@ struct user {
 };
 
 struct asiento{
-	int x;
-	int y;
+	unsigned int x;
+	unsigned int y;
 };
 
 struct reserva

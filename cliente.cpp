@@ -2,10 +2,16 @@
 #include <sys/wait.h>
 #include "ipc/cola.h"
 #include "ipc/senal.h"
+#include "ipc/memoriacompartida.h"
+#include "ipc/semaforo.h"
 #include "common.h"
 #include "mensajes.h"
 #include "clienteAsinc.h"
 #include <stdio.h>
+#include <stdlib.h>
+
+#define IDMEMORIACOMPARTIDA 100
+#define IDMUTEX 101
 
 sig_atomic_t vivo = 0;
 
@@ -21,35 +27,12 @@ void obtenerDatosLogin(mensaje &login)
 {
 }
 
-int main(int argc, char** argv){
-	int registrar = registrarSenal(SIGINT,terminar);
-
-	//Obtiene la cola de identificacion con el cine
-	int colaRespuesta = obtenerCola(COLA_LOGIN_CINE);
-
-	//Obtiene las colas de comunicaciones con el cine hijo
-	int colaEnvio = obtenerCola(COLA_RECEPCION_CINE);
-	int colaRecepcion = obtenerCola(COLA_ENVIO_CINE);
-
-
-
-	while (vivo == 0 && !autenticado){
-		
-	}
-
-	if (fork() == 0){
-		correrAsincronico(getpid());
-	}
-
-	bool terminado = false;
-
-	while(vivo == 0 && !terminado){
-		//hacer request al usuario
-		//enviarlo y ver respuesta
-		
-	}
-
-	return 0;
+void crearRecursos()
+{
+	//Crea la memoria compartida y el mutex para accederla
+	struct cmpMem memoria;
+	cmpMemCrear(memoria, sizeof(struct mensaje), IDMEMORIACOMPARTIDA);
+	crearSem(IDMUTEX, 1);
 }
 
 static bool autenticar(int colaRespuesta, int pid)
@@ -64,17 +47,17 @@ static bool autenticar(int colaRespuesta, int pid)
 	obtenerDatosLogin(login);
 
 	if( enviarMensaje(colaRespuesta,(void *)&login,sizeof(login)) < 0 )
-		return false
+		return false;
 	
 	if (recibirMensaje(colaRespuesta,pid,(void*)&respuesta,sizeof(respuesta)) < 0 )
 		if(respuesta.resultado == RESULTADOCONSULTAERRONEA)
-			return false
+			return false;
 	
 	if (entro(respuesta))
 		return true;
 }
 
-static mensaje consultarCine(int colaEnvio, int colaRecepcion, mensaje &consulta)
+static mensaje consultarCine(int colaEnvio, int colaRecepcion, mensaje &consulta, int pid)
 {
 	mensaje respuesta;
 
@@ -96,7 +79,7 @@ static unsigned int mostrarYElegirSala(const struct pedirSalas &salas)
 			printf("Opcion incorrecta. Intente nuevamente.\n");
 
 		printf("Seleccione la sala en la que desea reservar:\n");
-		for(unsigned int i=0; i < salas.totalSalas; i++)
+		for(unsigned int i=0; i < salas.salas.totalSalas; i++)
 		{
 			printf("Sala %d\n",i);
 		}
@@ -104,12 +87,17 @@ static unsigned int mostrarYElegirSala(const struct pedirSalas &salas)
 		printf("Opcion: ");
 		scanf("%d",&opcion);
 	}
-	while(opcion > salas.totalSalas);
+	while(opcion > salas.salas.totalSalas);
 	
 	return opcion;
 }
 
-static struct asiento mostrarYElegirAsiento(const struct sala &sala)
+static bool asientoValido(unsigned int x, unsigned int y)
+{
+	
+}
+
+static struct asiento mostrarYElegirAsiento()
 {
 	int entradaIncorrecta = 0;
 	unsigned int x = 0, y = 0;
@@ -125,7 +113,7 @@ static struct asiento mostrarYElegirAsiento(const struct sala &sala)
 		printf("Asiento (fila,columna): ");
 		scanf("%d %d",&x, &y);
 	}
-	while(x > CANTIDADMAXASIENTOS || y > CANTIDADMAXASIENTOS);
+	while((x > CANTIDADMAXASIENTOS || y > CANTIDADMAXASIENTOS) && !asientoValido(x,y));
 
 	struct asiento seleccion{x,y};
 	
@@ -143,15 +131,37 @@ static bool mostrarMensajeError()
 		if(entradaIncorrecta > 2)
 			printf("Opcion incorrecta. Intente nuevamente.\n");
 
-		printf("Seleccione como desea proceder:\n");
+		printf("Hubo un error, seleccione como desea proceder:\n");
 		fflush(stdin);
-		printf("0 - Reintentar operacion desde el principio.");
-		printf("1 - Cerrar");
+		printf("0 - Reintentar operacion desde el principio.\n");
+		printf("1 - Cerrar.\n");
 		scanf("%d",&opcion);
 	}
 	while(opcion > 1);
 	
 	return opcion;
+}
+
+static bool mostrarMenuMasReservas()
+{
+	int entradaIncorrecta = 0;
+	unsigned opcion = 0;
+	do
+	{
+		entradaIncorrecta++;
+		system("clear");
+		if(entradaIncorrecta > 2)
+			printf("Opcion incorrecta. Intente nuevamente.\n");
+
+		printf("Seleccione como desea proceder:\n");
+		fflush(stdin);
+		printf("0 - Hacer otra reserva.\n");
+		printf("1 - Comprar\n");
+		scanf("%d",&opcion);
+	}
+	while(opcion > 1);
+	
+	return !opcion;
 }
 
 static bool maquinaEstadosCliente(int colaEnvio, int colaRecepcion, int colaRespuesta)
@@ -160,6 +170,7 @@ static bool maquinaEstadosCliente(int colaEnvio, int colaRecepcion, int colaResp
 	mensaje pedirSala;
 	mensaje reservar;
 	mensaje comprar;
+	mensaje respuesta;
 
 	bool eligioCerrar = false;
 	int pid = getpid();
@@ -169,6 +180,7 @@ static bool maquinaEstadosCliente(int colaEnvio, int colaRecepcion, int colaResp
 		exit(0);
 	}
 
+	//Llena en las estructuras los campos comunes.
 	pedirSalas.mtype = pid;
 	pedirSalas.salaE.userid = pid;
 	pedirSalas.tipoMensaje = PEDIR_SALAS;
@@ -183,11 +195,12 @@ static bool maquinaEstadosCliente(int colaEnvio, int colaRecepcion, int colaResp
 
 	comprar.mtype = pid;
 	comprar.tipoMensaje = FINALIZAR_COMPRA;
+	comprar.fCompra.userid = pid;
 
 	while(!eligioCerrar)
 	{
 		//Pide las salas.
-		mensaje salas = consultarCine(colaEnvio, colaRecepcion, pedirSalas);
+		mensaje salas = consultarCine(colaEnvio, colaRecepcion, pedirSalas, pid);
 
 		if(salas.resultado == RESULTADOCONSULTAERRONEA)
 		{
@@ -198,7 +211,7 @@ static bool maquinaEstadosCliente(int colaEnvio, int colaRecepcion, int colaResp
 		//Envia la seleccion del usuario y recibe el estado de la sala.
 		pedirSala.salaE.salaid = mostrarYElegirSala(salas.salaP);
 
-		mensaje sala = consultarCine(colaEnvio, colaRecepcion, &pedirSala);
+		mensaje sala = consultarCine(colaEnvio, colaRecepcion, pedirSala, pid);
 
 		if(sala.resultado == RESULTADOCONSULTAERRONEA)
 		{
@@ -206,11 +219,57 @@ static bool maquinaEstadosCliente(int colaEnvio, int colaRecepcion, int colaResp
 			continue;
 		}
 
+		bool masReservas = true;
+
 		//Elige los asientos
+		reservar.asientoS.idSala = pedirSala.salaE.salaid;
+		reservar.asientoS.estado = ASIENTORESERVADO;
 
-		elegirAsientos()
+		do
+		{
+			reservar.asientoS.asiento = mostrarYElegirAsiento();
+		
+			respuesta = consultarCine(colaEnvio, colaRecepcion, reservar, pid);
 
+			if(respuesta.resultado == RESULTADOCONSULTAERRONEA)
+				printf("Error al reservar el asiento, ya estaba reservado.");
 			
+			//Muestra el menu
+			masReservas = mostrarMenuMasReservas();
+		}
+		while(masReservas);
+
+		//Finaliza la compra
+		
+		respuesta = consultarCine(colaEnvio, colaRecepcion, comprar, pid);
+		
+		if(respuesta.resultado == RESULTADOCONSULTAERRONEA)
+		{
+			eligioCerrar = mostrarMensajeError();
+			continue;
+		}
+
+		eligioCerrar = true;	
 	}
 	
+	return true;
+}
+
+int main(int argc, char** argv){
+	int registrar = registrarSenal(SIGINT,terminar);
+
+	//Obtiene la cola de identificacion con el cine
+	int colaRespuesta = obtenerCola(COLA_LOGIN_CINE);
+
+	//Obtiene las colas de comunicaciones con el cine hijo
+	int colaEnvio = obtenerCola(COLA_RECEPCION_CINE);
+	int colaRecepcion = obtenerCola(COLA_ENVIO_CINE);
+
+	if (fork() == 0){
+		correrAsincronico(getpid());
+	}
+
+	maquinaEstadosCliente(colaEnvio, colaRecepcion, colaRespuesta);
+
+	return 0;
 }
