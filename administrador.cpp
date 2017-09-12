@@ -6,7 +6,7 @@
 #include "administrador.h"
 #include "baseDeDatos/baseDeDatos.h"
 
-sig_atomic_t admin_vivo = 0;
+sig_atomic_t admin_vivo = 1;
 
 void terminarAdmin(int sigint){
 	admin_vivo = 0;
@@ -76,15 +76,19 @@ int procesarMensaje(const mensaje &recibido, int colaEnvio, int colaEnvioAsincro
 				enviarMensajeAsincronico(colaEnvioAsincronico, recibido.asientoS.idSala, baseDeDatos);
 				break;
 			case FINALIZAR_COMPRA:
-				if(dbComprarAsiento(baseDeDatos, recibido.asientoS))
+				if(dbComprarAsiento(baseDeDatos, recibido.asientoS)){
 					respuesta.resultado = RESULTADOOK;
+					enviarMensajeAsincronico(colaEnvioAsincronico, recibido.asientoS.idSala, baseDeDatos);
+				}
 				else
 					respuesta.resultado = RESULTADOERROR;
+
+				break;
 			default:
 				respuesta.resultado = RESULTADOCONSULTAERRONEA;
 				break;
 		}
-
+	printf("proceso mensaje asincronico cine\n");
 	return enviarMensaje(colaEnvio,(void*)&respuesta,sizeof(respuesta));
 }
 
@@ -131,6 +135,7 @@ void correrAdministrador(){
 			printf("Admin error al obtener cola");
 			break;
 		}
+		printf("recibio mensaje asincronico cine\n");
 		if ( procesarMensaje(recibido, colaEnvio, colaEnvioAsincronico, baseDeDatos) < 0){
 			printf("Admin error al enviar respuestas");
 			break;

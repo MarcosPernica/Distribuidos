@@ -28,18 +28,21 @@ int main(int argc,char** argv)
 	int senalRegistrada = registrarSenal(SIGINT,terminar);
 	if (senalRegistrada < 0){
 		printf("Error en registrar senial %d \n",senalRegistrada);
+		return 1;
 	}
 
 	//para cola de recibo
 	int colaLogin = obtenerCola(COLA_LOGIN_CINE);
 	if (colaLogin < 0){
 		printf("Error en cola recepcion %d \n",colaLogin);
+		return 1;
 	}
 
 	//para cola de respuetsa
 	int colaRespuesta = obtenerCola(COLA_ENVIO_CINE);
 	if (colaRespuesta < 0){
 		printf("Error en cola envio %d \n",colaRespuesta);
+		return 1;
 	}
 
 	if (fork() == 0){
@@ -51,7 +54,6 @@ int main(int argc,char** argv)
 		mensaje leido;
 		if (recibirMensaje(colaLogin,LOGIN_TYPE,(void *)&leido,sizeof(leido)) == -1 )
 		{
-			//TODO handle erro
 			printf("Error al recibir datos \n");
 			break;
 		}
@@ -72,8 +74,9 @@ int main(int argc,char** argv)
 		loginResponse.mtype = leido.l.id;
 		loginResponse.tipoMensaje = LOGIN_RESPONSE;
 		loginResponse.lresponse = response;
-		if (enviarMensaje(colaLogin,(void*)&loginResponse,sizeof(loginResponse)) == -1){
-			//TODO handle error
+		loginResponse.resultado = RESULTADOOK;
+		if ( enviarMensaje(colaRespuesta,(void*)&loginResponse,sizeof(loginResponse)) == -1 )
+		{
 			printf("Error al enviar datos \n");
 			break;
 		}

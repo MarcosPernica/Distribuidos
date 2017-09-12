@@ -10,15 +10,13 @@ CLIENT_SRCS= $(COMMON_SRCS) clienteAsinc.cpp cliente.cpp
 CINE_OBJS=$(subst .cpp,.o,$(CINE_SRCS))
 CLIENT_OBJS= $(subst .cpp,.o,$(CLIENT_SRCS))
 
+all: client cine
+
 client: $(CLIENT_OBJS)
 	$(CC) $(DEBUG) -o client $(CLIENT_OBJS)
-	if [ ! -d ./build/client/ ]; then mkdir -p ./build/client; fi
-	mv *.o ./build/client/
 	
 cine: $(CINE_OBJS)
 	$(CC) $(DEBUG) -o cine $(CINE_OBJS)
-	if [ ! -d ./build/cine/ ]; then mkdir -p ./build/cine; fi
-	mv *.o ./build/cine/
 
 #--CINE---
 cine.o: cine.cpp cinehijo.h $(COMMON_DEPENDENCIES) baseDeDatos/baseDeDatos.h administrador.h

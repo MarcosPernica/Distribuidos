@@ -30,7 +30,7 @@ std::vector<unsigned int> dbObtenerUsuariosSala(struct db &db, struct elegirSala
 //Las siguientes primitivas operan sobre la sala especificada en 'reserva'
 bool dbReservarAsiento(struct db &db, const struct reserva &reserva);
 
-bool dbComprarAsiento(struct db &db, const struct reserva &reserva);
+bool dbComprarAsiento(struct db &db, const struct finalizarCompra &finalizarCompra);
 
 bool dbLiberarAsiento(struct db &db, const struct reserva &reserva);
 

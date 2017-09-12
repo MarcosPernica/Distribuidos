@@ -30,8 +30,8 @@ void administrarCliente(login login){
 	}
 	int pid = login.id;
 	mensaje msg;
-	int colaId = obtenerCola(COLA_RECEPCION_CINE);
-	if (colaId == -1){
+	int colaRecepcion = obtenerCola(COLA_RECEPCION_CINE);
+	if (colaRecepcion == -1){
 		printf("Hijo error al obtener cola recepcion");
 		exit(1);
 	}
@@ -49,26 +49,28 @@ void administrarCliente(login login){
 
 	while (hijo_vivo)
 	{
-		if (recibirMensaje(colaId,pid,(void*)&msg,sizeof(msg)) == -1)
+		if (recibirMensaje(colaRecepcion,pid,(void*)&msg,sizeof(msg)) == -1)
 		{
 			//handle error
 			printf("Hijo error al recibir mensaje");
 			break;
 		}
-
+		printf("cinehijo recibio msj\n");
 		//Se ve si es una reserva/liberacion de asiento.
 		reservaDeAsiento = msg.tipoMensaje == INTERACCION_ASIENTO;
 
 		mensaje respuesta;
 		enviarMensaje(colaAdmin,(void*)&msg,sizeof(msg));
+		printf("envio a async\n");
 		recibirMensaje(colaEnvioAdmin,pid,(void*)&respuesta,sizeof(respuesta));
-
+		printf("recibio de async\n");
 		if (enviarMensaje(colaEnvio,(void*)&respuesta,sizeof(respuesta)) == -1)
 		{
 			//handle error
 			printf("Hijo error al enviar mensaje");
 			break;
 		}
+		printf("envio a cliente\n");
 
 		//Se guardan los asientos que el usuario reservo asi despues se liberan en el timeout. 
 		if(reservaDeAsiento && respuesta.resultado == RESULTADOOK)

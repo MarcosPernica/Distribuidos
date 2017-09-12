@@ -27,7 +27,7 @@ void correrAsincronico(int pid){
 	
 	while (asinc_vivo){
 		recibirMensaje(cola,pid,(void *)&mensaje,sizeof(mensaje));
-		
+		printf("hijo cliente recibio evento\n");
 		//Bloquea el acceso al mapa en memoria.
 
 		tomarSem(semaforo);

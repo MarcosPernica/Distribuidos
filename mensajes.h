@@ -42,7 +42,6 @@ struct elegirSala{
 
 struct finalizarCompra {
 	int userid;
-	int compro;
 };
 
 struct mensaje{

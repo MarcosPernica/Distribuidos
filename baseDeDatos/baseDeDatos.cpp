@@ -77,14 +77,9 @@ bool dbReservarAsiento(struct db &db, const struct reserva &reserva)
 	return false;	
 }
 
-bool dbComprarAsiento(struct db &db, const struct reserva &reserva)
+bool dbComprarAsiento(struct db &db, const struct finalizarCompra &reserva)
 {
-	if(reserva.idSala < db.cantidadSalas && reserva.asiento.x < CANTIDADMAXASIENTOS, reserva.asiento.y < CANTIDADMAXASIENTOS)
-	{
-		db.estadoAsientosEnSalas[reserva.idSala][reserva.asiento.y][reserva.asiento.x] = reserva;
-		db.estadoAsientosEnSalas[reserva.idSala][reserva.asiento.y][reserva.asiento.x].estado = ESTADOASIENTOCOMPRADO;
-		return true;
-	}
+	//TODO comprar todos los asin\entos del usuario
 	return false;	
 }
 
