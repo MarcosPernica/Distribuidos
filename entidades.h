@@ -1,5 +1,5 @@
-#ifndef ENTIDADES
-#define ENTIDADES
+#ifndef _ENTIDADES_
+#define _ENTIDADES_
 
 #define CANTIDADMAXASIENTOS 10
 #define CANTIDADMAXSALAS 20
@@ -19,10 +19,7 @@ struct asiento{
 	unsigned int y;
 };
 
-bool operator==(struct asiento& a, struct asiento& b)
-{
-	return a.x == b.x && a.y == b.y;
-}
+bool operator==(struct asiento& a, struct asiento& b);
 
 struct reserva
 {

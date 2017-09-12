@@ -55,7 +55,7 @@ bool dbSalirSala(struct db &db, struct elegirSala consulta)
 	return true;
 }
 
-std::vector<unsigned int> dbObtenerUsuariosSala(struct db &db, int idSala)
+std::vector<unsigned int> dbObtenerUsuariosSala(const struct db &db, unsigned int idSala)
 {
 	std::vector<unsigned int> resultados;
 

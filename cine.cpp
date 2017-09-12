@@ -15,6 +15,10 @@ void terminar(int sigint){
 	//mandar senal a hijos?
 }
 
+bool loginUser(struct user) {
+	return true;
+}
+
 int main(int argc,char** argv)
 {
 	//initalize

@@ -34,8 +34,6 @@ bool dbComprarAsiento(struct db &db, const struct reserva &reserva);
 
 bool dbLiberarAsiento(struct db &db, const struct reserva &reserva);
 
-
-
 struct salas dbObtenerSalas(const struct db &db);
 
 const asientos &dbObtenerAsientosSala(const struct db &db, unsigned int idSala);

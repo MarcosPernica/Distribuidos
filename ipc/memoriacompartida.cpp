@@ -22,7 +22,7 @@ int cmpMemCrear(size_t tamano, int idMemoria)
 	return id;
 }
 
-int cmpMemObtener(struct cmpMem &memoria, size_t tamano, int idMemoria)
+int cmpMemObtener(size_t tamano, int idMemoria)
 {
 	key_t clave = ftok(RUTAMEMORIACOMPARTIDA, idMemoria);
 
@@ -49,5 +49,5 @@ int cmpMemDestruir(int idMemoria, void* memoria)
 
 void *cmpMemObtenerMemoria(int idMemoria)
 {
-	return shmat(idMemoria, NULL; 0);
+	return shmat(idMemoria, NULL, 0);
 }
