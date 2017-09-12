@@ -10,8 +10,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define IDMEMORIACOMPARTIDA 100
-#define IDMUTEX 101
 
 sig_atomic_t vivo = 0;
 
@@ -29,10 +27,16 @@ void obtenerDatosLogin(mensaje &login)
 
 void crearRecursos()
 {
-	//Crea la memoria compartida y el mutex para accederla
-	struct cmpMem memoria;
-	cmpMemCrear(memoria, sizeof(struct mensaje), IDMEMORIACOMPARTIDA);
+	//Crea la memoria compartida y el mutex para accederla.
+	cmpMemCrear(sizeof(struct sala), IDMEMORIACOMPARTIDA);
 	crearSem(IDMUTEX, 1);
+}
+
+void destruirRecursos(void *memoria, int idMemoria, int idSemaforo)
+{
+	//Destruye la memoria compartida y el mutex para accederla.
+	cmpMemDestruir(idMemoria, memoria);
+	destruirSem(idSemaforo);
 }
 
 static bool autenticar(int colaRespuesta, int pid)
@@ -92,12 +96,18 @@ static unsigned int mostrarYElegirSala(const struct pedirSalas &salas)
 	return opcion;
 }
 
-static bool asientoValido(unsigned int x, unsigned int y)
+static bool asientoValido(struct sala *informacionSala, int idSemaforo, unsigned int x, unsigned int y)
 {
-	
+	tomarSem(idSemaforo);
+
+	struct reserva res = informacionSala->estadoAsientos[x][y];
+
+	liberarSem(idSemaforo);
+
+	return (res.estado == ESTADOASIENTOLIBRE); 
 }
 
-static struct asiento mostrarYElegirAsiento()
+static struct asiento mostrarYElegirAsiento(struct sala *informacionSala, int idSemaforo)
 {
 	int entradaIncorrecta = 0;
 	unsigned int x = 0, y = 0;
@@ -113,7 +123,7 @@ static struct asiento mostrarYElegirAsiento()
 		printf("Asiento (fila,columna): ");
 		scanf("%d %d",&x, &y);
 	}
-	while((x > CANTIDADMAXASIENTOS || y > CANTIDADMAXASIENTOS) && !asientoValido(x,y));
+	while((x > CANTIDADMAXASIENTOS || y > CANTIDADMAXASIENTOS) && !asientoValido(informacionSala, idSemaforo, x, y));
 
 	struct asiento seleccion{x,y};
 	
@@ -164,7 +174,7 @@ static bool mostrarMenuMasReservas()
 	return !opcion;
 }
 
-static bool maquinaEstadosCliente(int colaEnvio, int colaRecepcion, int colaRespuesta)
+static bool maquinaEstadosCliente(int colaEnvio, int colaRecepcion, int colaRespuesta, struct sala *informacionSala, int idSemaforo)
 {
 	mensaje pedirSalas;
 	mensaje pedirSala;
@@ -227,7 +237,7 @@ static bool maquinaEstadosCliente(int colaEnvio, int colaRecepcion, int colaResp
 
 		do
 		{
-			reservar.asientoS.asiento = mostrarYElegirAsiento();
+			reservar.asientoS.asiento = mostrarYElegirAsiento(informacionSala, idSemaforo);
 		
 			respuesta = consultarCine(colaEnvio, colaRecepcion, reservar, pid);
 
@@ -265,11 +275,25 @@ int main(int argc, char** argv){
 	int colaEnvio = obtenerCola(COLA_RECEPCION_CINE);
 	int colaRecepcion = obtenerCola(COLA_ENVIO_CINE);
 
+	crearRecursos();
+
 	if (fork() == 0){
 		correrAsincronico(getpid());
 	}
 
-	maquinaEstadosCliente(colaEnvio, colaRecepcion, colaRespuesta);
+	//Obtiene la memoria compartida y el mutex de la memoria.
+	int idMemoria = cmpMemObtener(sizeof(struct sala), IDMEMORIACOMPARTIDA);
+	int idSemaforo = obtenerSem(IDMUTEX);
+
+	struct sala *informacionSala = (struct sala*) cmpMemObtenerMemoria(idMemoria);
+	
+	//Lanza la interfaz en si.
+
+	maquinaEstadosCliente(colaEnvio, colaRecepcion, colaRespuesta, informacionSala, idSemaforo);
+
+	//Destruye los recursos
+
+	destruirRecursos(informacionSala, idMemoria, idSemaforo);
 
 	return 0;
 }

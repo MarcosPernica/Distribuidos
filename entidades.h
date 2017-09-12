@@ -19,6 +19,11 @@ struct asiento{
 	unsigned int y;
 };
 
+bool operator==(struct asiento& a, struct asiento& b)
+{
+	return a.x == b.x && a.y == b.y;
+}
+
 struct reserva
 {
 	int idSala;

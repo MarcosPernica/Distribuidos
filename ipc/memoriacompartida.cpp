@@ -7,15 +7,8 @@
 #include <string.h>
 
 
-int cmpMemCrear(struct cmpMem &memoria, size_t tamano, int idMemoria)
+int cmpMemCrear(size_t tamano, int idMemoria)
 {
-	if(memoria.memoria != NULL)
-		return MEMERRORYACREADA;
-
-	memoria.id = -1;
-	memoria.memoria = NULL;
-	memoria.tamano = 0;
-
 	key_t clave = ftok(RUTAMEMORIACOMPARTIDA, idMemoria);
 
 	if(clave == -1)
@@ -26,28 +19,11 @@ int cmpMemCrear(struct cmpMem &memoria, size_t tamano, int idMemoria)
 	if(id == -1)	
 		return MEMERRORCREACION;
 
-	memoria.id = id;
-
-	void *mem = shmat(memoria.id, NULL, 0);
-
-	if(mem == (void*)-1)
-		return MEMERRORMAPEO;
-
-	memoria.memoria = mem;
-	memoria.tamano = tamano;
-
-	return MEMOK;
+	return id;
 }
 
 int cmpMemObtener(struct cmpMem &memoria, size_t tamano, int idMemoria)
 {
-	if(memoria.memoria != NULL)
-		return MEMERRORYACREADA;
-
-	memoria.id = -1;
-	memoria.memoria = NULL;
-	memoria.tamano = 0;
-
 	key_t clave = ftok(RUTAMEMORIACOMPARTIDA, idMemoria);
 
 	if(clave == -1)
@@ -58,64 +34,20 @@ int cmpMemObtener(struct cmpMem &memoria, size_t tamano, int idMemoria)
 	if(id == -1)
 		return MEMERRORCREACION;
 
-	memoria.id = id;
+	return id;
+}
 
-	void *mem = shmat(memoria.id, NULL, 0);
+int cmpMemDestruir(int idMemoria, void* memoria)
+{
+	shmctl(idMemoria, IPC_RMID, NULL);	
 
-	if(mem == (void*)-1)
-		return MEMERRORMAPEO;
-
-	memoria.memoria = mem;
-	memoria.tamano = tamano;
+	if(shmdt(memoria) == -1)
+		return MEMERRORDESTRUIR;
 
 	return MEMOK;
 }
 
-int cmpMemDestruir(struct cmpMem &memoria)
+void *cmpMemObtenerMemoria(int idMemoria)
 {
-	if(memoria.id != -1)
-	{
-		shmctl(memoria.id, IPC_RMID, NULL);
-		memoria.id = -1;
-	}
-
-	if(memoria.memoria)
-	{
-		if(shmdt(memoria.memoria) == -1)
-			return MEMERRORDESTRUIR;
-		else
-		{
-			memoria.memoria = NULL;
-			memoria.tamano = 0;
-			
-		}
-	}
-
-	return MEMERRORDESTRUIR;
+	return shmat(idMemoria, NULL; 0);
 }
-
-void *cmpMemObtenerMemoria(struct cmpMem &memoria)
-{
-	return memoria.memoria;
-}
-
-int cmpMemLeer(struct cmpMem &memoria, void* buffer)
-{
-	if(memoria.memoria == NULL)
-		return MEMERRORLECTURA;
-	
-	memcpy(buffer, memoria.memoria, memoria.tamano);
-
-	return MEMOK;
-}
-
-int cmpMemEscribir(struct cmpMem &memoria, void* buffer)
-{
-	if(memoria.memoria == NULL)
-		return MEMERRORESCRITURA;
-	
-	memcpy(memoria.memoria, buffer, memoria.tamano);
-
-	return MEMOK;
-}
-

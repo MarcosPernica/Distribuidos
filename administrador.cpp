@@ -67,7 +67,7 @@ int procesarMensaje(const mensaje &recibido, int colaEnvio, int colaEnvioAsincro
 				respuesta.informacionSala = aux;			
 				break;
 			case INTERACCION_ASIENTO:
-				if(recibido.asientoS.estado == ASIENTODESRESERVADO)
+				if(recibido.asientoS.estado == ASIENTORESERVADO)
 					dbReservarAsiento(baseDeDatos, recibido.asientoS);
 				else
 					dbLiberarAsiento(baseDeDatos, recibido.asientoS);
