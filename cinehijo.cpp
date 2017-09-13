@@ -56,6 +56,7 @@ void administrarCliente(login login){
 			break;
 		}
 		printf("cinehijo recibio msj\n");
+
 		//Se ve si es una reserva/liberacion de asiento.
 		reservaDeAsiento = msg.tipoMensaje == INTERACCION_ASIENTO;
 
@@ -78,11 +79,11 @@ void administrarCliente(login login){
 			if(msg.asientoS.estado == ASIENTORESERVADO)
 				asientosUsuario.push_back(msg.asientoS);
 			else
+				//Esto es solo para el caso en que quisieramos soportar bajas de asientos (No lo hacemos ahora mismo).
 				quitarAsiento(asientosUsuario, msg.asientoS);
-
 		}
 		
-		//si se compro se vacia el vector de asientos reservados.
+		//Si se compro se vacia el vector de asientos reservados.
 		if(msg.tipoMensaje == FINALIZAR_COMPRA && respuesta.resultado == RESULTADOOK)
 			asientosUsuario.clear();
 				

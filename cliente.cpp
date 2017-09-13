@@ -231,6 +231,11 @@ static bool maquinaEstadosCliente(int colaEnvio, int colaRecepcion, int colaLogi
 			continue;
 		}
 
+		//Guarda el estado inicial de la sala.
+		tomarSem(idSemaforo);
+		*informacionSala = sala.informacionSala;
+		liberarSem(idSemaforo);
+
 		bool masReservas = true;
 
 		//Elige los asientos
@@ -243,7 +248,7 @@ static bool maquinaEstadosCliente(int colaEnvio, int colaRecepcion, int colaLogi
 		
 			respuesta = consultarCine(colaEnvio, colaRecepcion, reservar, pid);
 
-			if( respuesta.resultado == RESULTADOCONSULTAERRONEA )
+			if( respuesta.resultado == RESULTADOERROR )
 				printf("Error al reservar el asiento, ya estaba reservado.");
 			
 			//Muestra el menu

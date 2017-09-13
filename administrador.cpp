@@ -59,8 +59,8 @@ int procesarMensaje(const mensaje &recibido, int colaEnvio, int colaEnvioAsincro
 				break;
 			case ELEGIR_SALA:
 				//Por las dudas sale de la sala si estaba en una.
-				dbSalirSala(baseDeDatos, recibido.salaE);
-				dbEntrarSala(baseDeDatos, recibido.salaE);
+				dbSalirSala(baseDeDatos, recibido.salaE.userid);
+				dbEntrarSala(baseDeDatos, recibido.salaE.userid, recibido.salaE.salaid);
 				struct sala aux;
 				copiarArregloEnteros(aux.estadoAsientos, dbObtenerAsientosSala(baseDeDatos, recibido.salaE.salaid));
 				aux.id = recibido.salaE.salaid;
@@ -68,7 +68,10 @@ int procesarMensaje(const mensaje &recibido, int colaEnvio, int colaEnvioAsincro
 				break;
 			case INTERACCION_ASIENTO:
 				if(recibido.asientoS.estado == ASIENTORESERVADO)
-					dbReservarAsiento(baseDeDatos, recibido.asientoS);
+				{
+					if(!dbReservarAsiento(baseDeDatos, recibido.asientoS))
+						respuesta.resultado = RESULTADOERROR;
+				}
 				else
 					dbLiberarAsiento(baseDeDatos, recibido.asientoS);
 
@@ -76,13 +79,17 @@ int procesarMensaje(const mensaje &recibido, int colaEnvio, int colaEnvioAsincro
 				enviarMensajeAsincronico(colaEnvioAsincronico, recibido.asientoS.idSala, baseDeDatos);
 				break;
 			case FINALIZAR_COMPRA:
-				if(dbComprarAsiento(baseDeDatos, recibido.asientoS)){
+				if(dbComprarAsientos(baseDeDatos, recibido.fCompra)){
 					respuesta.resultado = RESULTADOOK;
 					enviarMensajeAsincronico(colaEnvioAsincronico, recibido.asientoS.idSala, baseDeDatos);
 				}
 				else
 					respuesta.resultado = RESULTADOERROR;
 
+				break;
+			case TIMEOUT:
+				dbLiberarAsientos(baseDeDatos, recibido.idUsuario);
+				dbSalirSala(baseDeDatos, recibido.idUsuario);
 				break;
 			default:
 				respuesta.resultado = RESULTADOCONSULTAERRONEA;

@@ -11,6 +11,7 @@
 #define ELEGIR_SALA 4
 #define INTERACCION_ASIENTO 5
 #define FINALIZAR_COMPRA 6
+#define TIMEOUT 13
 
 #define ASIENTORESERVADO 7
 #define ASIENTODESRESERVADO 8
@@ -56,6 +57,7 @@ struct mensaje{
 		struct sala informacionSala;
 		struct reserva asientoS;
 		struct finalizarCompra fCompra;
+		int idUsuario;
 	};
 };
 

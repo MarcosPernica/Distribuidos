@@ -24,6 +24,7 @@ bool operator==(struct asiento& a, struct asiento& b);
 struct reserva
 {
 	int idSala;
+	int idUsuario;
 	char nombreCliente[LONGITUDMAXNOMBRE];
 	char estado;
 	struct asiento asiento;

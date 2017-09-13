@@ -11,6 +11,7 @@ bool dbCrear(struct db &db, unsigned int cantidadSalas)
 			for(unsigned int e = 0; e < CANTIDADMAXASIENTOS; e++)
 			{
 				struct reserva aux;
+				aux.idUsuario = 0;
 				aux.idSala = i;
 				aux.nombreCliente[0] = '\n';
 				aux.estado = ESTADOASIENTOLIBRE;
@@ -23,34 +24,34 @@ bool dbCrear(struct db &db, unsigned int cantidadSalas)
 	return true;
 }	
 
-bool dbEntrarSala(struct db &db, struct elegirSala consulta)
+bool dbEntrarSala(struct db &db, int idUsuario, int idSala)
 {	
-	auto sala = db.salaPorUsuario.find(consulta.userid);
+	auto sala = db.salaPorUsuario.find(idUsuario);
 
-	if(sala == db.salaPorUsuario.end() || sala->second == consulta.salaid)
+	if(sala == db.salaPorUsuario.end() || sala->second == idUsuario)
 	{
-		db.usuariosPorSala.insert(std::pair<unsigned int, unsigned int>(consulta.salaid, consulta.userid));
-		db.salaPorUsuario[consulta.userid] = consulta.salaid;	
+		db.usuariosPorSala.insert(std::pair<unsigned int, unsigned int>(idSala, idUsuario));
+		db.salaPorUsuario[idUsuario] = idSala;	
 		return true;
 	}
 	return false;
 }
 
-bool dbSalirSala(struct db &db, struct elegirSala consulta)
+bool dbSalirSala(struct db &db, int idUsuario)
 {
-	auto sala = db.salaPorUsuario.find(consulta.userid);
+	auto sala = db.salaPorUsuario.find(idUsuario);
 
 	if(sala != db.salaPorUsuario.end())
 	{
 		auto usuarios = db.usuariosPorSala.equal_range(sala->second);
 		
 		for(auto i = usuarios.first; i != usuarios.second; i++)
-			if(consulta.userid == i->second)
+			if(idUsuario == i->second)
 			{
 				db.salaPorUsuario.erase(i);
 				break;
 			}
-		db.salaPorUsuario.erase(consulta.userid);
+		db.salaPorUsuario.erase(idUsuario);
 	}
 	return true;
 }
@@ -68,18 +69,37 @@ std::vector<unsigned int> dbObtenerUsuariosSala(const struct db &db, unsigned in
 
 bool dbReservarAsiento(struct db &db, const struct reserva &reserva)
 {
-	if(reserva.idSala < db.cantidadSalas && reserva.asiento.x < CANTIDADMAXASIENTOS, reserva.asiento.y < CANTIDADMAXASIENTOS)
+	if(reserva.idSala < db.cantidadSalas && reserva.asiento.x < CANTIDADMAXASIENTOS && reserva.asiento.y < CANTIDADMAXASIENTOS)
 	{
-		db.estadoAsientosEnSalas[reserva.idSala][reserva.asiento.y][reserva.asiento.x] = reserva;
-		db.estadoAsientosEnSalas[reserva.idSala][reserva.asiento.y][reserva.asiento.x].estado = ESTADOASIENTORESERVADO;
-		return  true;
+		if(db.estadoAsientosEnSalas[reserva.idSala][reserva.asiento.y][reserva.asiento.x].estado == ESTADOASIENTOLIBRE)
+		{
+			db.estadoAsientosEnSalas[reserva.idSala][reserva.asiento.y][reserva.asiento.x] = reserva;
+			db.estadoAsientosEnSalas[reserva.idSala][reserva.asiento.y][reserva.asiento.x].estado = ESTADOASIENTORESERVADO;
+			return  true;
+		}
+		return false;
 	}
 	return false;	
 }
 
-bool dbComprarAsiento(struct db &db, const struct finalizarCompra &reserva)
+bool dbComprarAsientos(struct db &db, const struct finalizarCompra &compra)
 {
-	//TODO comprar todos los asin\entos del usuario
+	auto sala = db.salaPorUsuario.find(compra.userid);
+
+	if(sala != db.salaPorUsuario.end())
+	{
+		for(unsigned int i=0;i < CANTIDADMAXASIENTOS; i++)
+			for(unsigned int a = 0; a < CANTIDADMAXASIENTOS; a++)
+			{
+				struct reserva aux = db.estadoAsientosEnSalas[sala->second][i][a];
+				if(aux.idUsuario == compra.userid && aux.estado == ESTADOASIENTORESERVADO)
+				{
+					aux.estado = ESTADOASIENTOCOMPRADO;
+					db.estadoAsientosEnSalas[sala->second][i][a] = aux;
+				}
+			}
+		return true;
+	}
 	return false;	
 }
 
@@ -91,6 +111,26 @@ bool dbLiberarAsiento(struct db &db, const struct reserva &reserva)
 		return true;
 	}
 	return false;
+}
+
+bool dbLiberarAsientos(struct db &db, int idUsuario)
+{
+	auto sala = db.salaPorUsuario.find(idUsuario);
+
+	if(sala != db.salaPorUsuario.end())
+	{
+		for(unsigned int i=0;i < CANTIDADMAXASIENTOS; i++)
+			for(unsigned int a = 0; a < CANTIDADMAXASIENTOS; a++)
+			{
+				struct reserva aux = db.estadoAsientosEnSalas[sala->second][i][a];
+				if(aux.idUsuario == idUsuario && aux.estado == ESTADOASIENTORESERVADO)
+				{
+					aux.estado = ESTADOASIENTOLIBRE;
+					db.estadoAsientosEnSalas[sala->second][i][a] = aux;
+				}
+			}
+	}
+	return true;	
 }
 
 struct salas dbObtenerSalas(const struct db &db)
