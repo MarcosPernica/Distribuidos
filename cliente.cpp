@@ -17,18 +17,60 @@ void terminar(int sigint){
 	vivo = 1;
 }
 
+
+
 void obtenerDatosLogin(mensaje &login)
 {
-	printf("Ingrese su nombre de usuario: \n");
- 	//TODO read msgs
-	printf("Ingrese su contrasena: \n");
+	char stdinRead[1024];
+	user user;
+	int lenRead;
+	int error = 0;
+	do
+	{
+		system("clear");
+		if( error > 0 ){
+			printf("Por favor ingrese un dato de menos de %d caracteres \n", LONGITUDMAXNOMBRE);
+		}
+		error = 1;
+		printf("Ingrese su nombre de usuario: \n");
+		fflush(stdin);
+		scanf("%1023s",stdinRead);
+		lenRead = strlen(stdinRead);
+		if( lenRead < LONGITUDMAXNOMBRE ){
+			strcpy(user.nombreCliente,stdinRead);
+			break;
+		}
+	} while(true);
+
+	error = 0;
+
+	do
+	{
+		if( error > 0 ){
+			printf("Por favor ingrese un dato de menos de %d caracteres \n", LONGITUDMAXNOMBRE);
+		}
+		error = 1;
+		printf("Ingrese su contrasena: \n");
+		fflush(stdin);
+		scanf("%1023s",stdinRead);
+		lenRead = strlen(stdinRead);
+		if( lenRead < LONGITUDMAXNOMBRE ){
+			strcpy(user.password,stdinRead);
+			break;
+		}
+	} while(true);
+
+	login.l.user = user;
 }
 
 void crearRecursos()
 {
 	//Crea la memoria compartida y el mutex para accederla.
 	cmpMemCrear(sizeof(struct sala), IDMEMORIACOMPARTIDA);
-	crearSem(IDMUTEX, 1);
+	if ( crearSem(IDMUTEX, 1) == -1 ){
+		printf("Ya existia el semaforo de la memoria compartida\n");
+		exit(1);
+	}
 }
 
 void destruirRecursos(void *memoria, int idMemoria, int idSemaforo)
@@ -109,6 +151,27 @@ static bool asientoValido(struct sala *informacionSala, int idSemaforo, unsigned
 	return (res.estado == ESTADOASIENTOLIBRE); 
 }
 
+static void imprimirSala(struct sala *informacionSala, int idSemaforo){
+	tomarSem(idSemaforo);
+	printf("\t ASIENTOS \t\n");
+	printf("  ");
+	for (int i = 0; i < CANTIDADMAXASIENTOS; i++ ){
+		printf("%d ",i + 1);
+	}
+	printf("\n");
+
+	for (int i = 0; i < CANTIDADMAXASIENTOS; i++ ){
+		printf("%d ",i + 1);
+		for (int j = 0; j < CANTIDADMAXASIENTOS; j++){
+			reserva seat = informacionSala->estadoAsientos[i][j];
+			printf("%c ",seat.estado);
+		}
+		printf("\n");
+	}
+	fflush(stdin);
+	liberarSem(idSemaforo);
+}
+
 static struct asiento mostrarYElegirAsiento(struct sala *informacionSala, int idSemaforo)
 {
 	int entradaIncorrecta = 0;
@@ -117,6 +180,7 @@ static struct asiento mostrarYElegirAsiento(struct sala *informacionSala, int id
 	{
 		entradaIncorrecta++;
 		system("clear");
+		imprimirSala(informacionSala,idSemaforo);
 		if(entradaIncorrecta > 2)
 			printf("Asiento no valido. Intente nuevamente.\n");
 
@@ -225,7 +289,7 @@ static bool maquinaEstadosCliente(int colaEnvio, int colaRecepcion, int colaLogi
 
 		mensaje sala = consultarCine(colaEnvio, colaRecepcion, pedirSala, pid);
 
-		if(sala.resultado == RESULTADOCONSULTAERRONEA)
+		if( sala.resultado == RESULTADOCONSULTAERRONEA )
 		{
 			eligioCerrar = mostrarMensajeError();
 			continue;
@@ -284,6 +348,7 @@ int main(int argc, char** argv){
 
 	crearRecursos();
 	int pid = getpid();
+
 	if (fork() == 0){
 		correrAsincronico(pid);
 	}

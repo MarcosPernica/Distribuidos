@@ -14,7 +14,7 @@ int crearSem(int id,  int initialValue)
 	}
 	union semun sem;
 	sem.val = initialValue;
-	if(semctl(id, 0, SETVAL, sem) == -1){
+	if( semctl(semId, 0, SETVAL, sem) == -1){
 		destruirSem(semId);
 		return -1;
 	}
