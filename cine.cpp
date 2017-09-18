@@ -54,7 +54,7 @@ int main(int argc,char** argv)
 		mensaje leido;
 		if (recibirMensaje(colaLogin,LOGIN_TYPE,(void *)&leido,sizeof(leido)) == -1 )
 		{
-			printf("Error al recibir datos \n");
+			printf("Error al recibir login \n");
 			break;
 		}
 

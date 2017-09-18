@@ -4,3 +4,6 @@ build/
 .cproject
 .settings/
 cine
+client
+init
+destroy

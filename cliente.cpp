@@ -9,6 +9,7 @@
 #include "clienteAsinc.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include "timeout.h"
 
 
 sig_atomic_t vivo = 0;
@@ -17,7 +18,11 @@ void terminar(int sigint){
 	vivo = 1;
 }
 
+sig_atomic_t alarma = 0;
 
+void alarmHandler(int sigint){
+	alarma = 1;
+}
 
 void obtenerDatosLogin(mensaje &login)
 {
@@ -83,37 +88,26 @@ void destruirRecursos(void *memoria, int idMemoria, int idSemaforo)
 	destruirSem(idSemaforo);
 }
 
-static bool autenticar(int colaEnvio,int colaRespuesta, int pid)
+static int consultarCine(int colaEnvio, int colaRecepcion, mensaje &consulta, int pid,mensaje &respuesta)
 {
-	mensaje login;
-	login.mtype = LOGIN_TYPE;
-	login.l.id = pid;
-	printf("pid: %d\n",pid);
-	mensaje respuesta;
 
-	//Obtiene los datos por consola
-	obtenerDatosLogin(login);
+	if ( enviarMensaje(colaEnvio,(void *)&consulta,sizeof(mensaje)) == -1 ){
+		printf("Error enviando mensaje al cine\n");
+		return -1;
+	}
 
-	if( enviarMensaje(colaEnvio,(void *)&login,sizeof(login) ) < 0 )
-		return false;
+	ponerAlarma(TIME_OUT_CONNECTION);
+	while ( recibirMensaje(colaRecepcion,pid,(void*)&respuesta,sizeof(mensaje)) == -1 ){
+		if( ocurrioAlarma(alarma) ){
+			printf("No se puede comunicar con el cine\n");
+			//remuevo mensaje puesto
+			recibirMensajeAsinc(colaEnvio,pid,(void*)&respuesta,sizeof(mensaje));
+		}
+		return -1;
+	}
+	cancelarAlarma();
+	return 0;
 
-	if ( recibirMensaje(colaRespuesta,pid,(void*)&respuesta,sizeof(respuesta) ) < 0 )
-		return false;
-
-	if( respuesta.resultado == RESULTADOCONSULTAERRONEA )
-			return false;
-	
-	return true;
-}
-
-static mensaje consultarCine(int colaEnvio, int colaRecepcion, mensaje &consulta, int pid)
-{
-	mensaje respuesta;
-
-	enviarMensaje(colaEnvio,(void *)&consulta,sizeof(mensaje));
-	recibirMensaje(colaRecepcion,pid,(void*)&respuesta,sizeof(respuesta));
-
-	return respuesta;
 }
 
 static unsigned int mostrarYElegirSala(const struct pedirSalas &salas)
@@ -241,6 +235,24 @@ static bool mostrarMenuMasReservas()
 	return !opcion;
 }
 
+static bool autenticar(int colaEnvio,int colaRespuesta, int pid)
+{
+	mensaje login;
+	login.mtype = LOGIN_TYPE;
+	login.l.id = pid;
+	mensaje respuesta;
+
+	obtenerDatosLogin(login);
+	if ( consultarCine(colaEnvio,colaRespuesta,login,pid,respuesta) == -1 ){
+		return false;
+	}
+
+	if( respuesta.resultado == RESULTADOCONSULTAERRONEA )
+			return false;
+
+	return true;
+}
+
 static bool maquinaEstadosCliente(int colaEnvio, int colaRecepcion, int colaLogin, struct sala *informacionSala, int idSemaforo)
 {
 	mensaje pedirSalas;
@@ -254,7 +266,7 @@ static bool maquinaEstadosCliente(int colaEnvio, int colaRecepcion, int colaLogi
 	if( !autenticar(colaLogin,colaRecepcion, pid) )
 	{
 		printf("Error al autenticar con servidor.\n");
-		exit(0);
+		return false;
 	}
 
 	//Llena en las estructuras los campos comunes.
@@ -277,7 +289,10 @@ static bool maquinaEstadosCliente(int colaEnvio, int colaRecepcion, int colaLogi
 	while(!eligioCerrar)
 	{
 		//Pide las salas.
-		mensaje salas = consultarCine(colaEnvio, colaRecepcion, pedirSalas, pid);
+		mensaje salas;
+		if ( consultarCine(colaEnvio, colaRecepcion, pedirSalas, pid,salas) == -1){
+			return false;
+		}
 
 		if(salas.resultado == RESULTADOCONSULTAERRONEA)
 		{
@@ -288,7 +303,10 @@ static bool maquinaEstadosCliente(int colaEnvio, int colaRecepcion, int colaLogi
 		//Envia la seleccion del usuario y recibe el estado de la sala.
 		pedirSala.salaE.salaid = mostrarYElegirSala(salas.salaP);
 
-		mensaje sala = consultarCine(colaEnvio, colaRecepcion, pedirSala, pid);
+		mensaje sala;
+		if( consultarCine(colaEnvio, colaRecepcion, pedirSala, pid,sala) == -1){
+			return false;
+		}
 
 		if( sala.resultado == RESULTADOCONSULTAERRONEA )
 		{
@@ -297,9 +315,11 @@ static bool maquinaEstadosCliente(int colaEnvio, int colaRecepcion, int colaLogi
 		}
 
 		//Guarda el estado inicial de la sala.
+		printf("semaphore section\n");
 		tomarSem(idSemaforo);
 		*informacionSala = sala.informacionSala;
 		liberarSem(idSemaforo);
+		printf("semaphore section out\n");
 
 		bool masReservas = true;
 
@@ -312,7 +332,9 @@ static bool maquinaEstadosCliente(int colaEnvio, int colaRecepcion, int colaLogi
 		{
 			reservar.asientoS.asiento = mostrarYElegirAsiento(informacionSala, idSemaforo);
 		
-			respuesta = consultarCine(colaEnvio, colaRecepcion, reservar, pid);
+			if( consultarCine(colaEnvio, colaRecepcion, reservar, pid,respuesta) == -1){
+				return false;
+			}
 
 			if( respuesta.resultado == RESULTADOERROR )
 				printf("Error al reservar el asiento, ya estaba reservado.");
@@ -324,7 +346,9 @@ static bool maquinaEstadosCliente(int colaEnvio, int colaRecepcion, int colaLogi
 
 		//Finaliza la compra
 		
-		respuesta = consultarCine(colaEnvio, colaRecepcion, comprar, pid);
+		if( consultarCine(colaEnvio, colaRecepcion, comprar, pid, respuesta) == -1){
+			break;
+		}
 		
 		if( respuesta.resultado == RESULTADOCONSULTAERRONEA )
 		{
@@ -337,13 +361,20 @@ static bool maquinaEstadosCliente(int colaEnvio, int colaRecepcion, int colaLogi
 	mensaje cerrar;
 	cerrar.tipoMensaje = SALIR_SALA;
 	cerrar.idUsuario = pid;
-	consultarCine(colaEnvio,colaRecepcion,cerrar,pid);
+	consultarCine(colaEnvio,colaRecepcion,cerrar,pid,respuesta);
 	return true;
 }
 
 int main(int argc, char** argv){
-	int registrar = registrarSenal(SIGINT,terminar);
+	if( registrarSenal(SIGINT,terminar) == -1){
+		printf("Cliente: error al registrar senal");
+		exit(1);
+	}
 
+	if( registrarSenal(SIGALRM,alarmHandler) == -1 ){
+		printf("Cliente: error al registrar senal timeout");
+		exit(1);
+	}
 	//Obtiene la cola de identificacion con el cine
 	int colaLogin = obtenerCola(COLA_LOGIN_CINE);
 
@@ -360,7 +391,7 @@ int main(int argc, char** argv){
 	}
 
 	//Obtiene la memoria compartida y el mutex de la memoria.
-	int idMemoria = cmpMemObtener(sizeof(struct sala), IDMEMORIACOMPARTIDA);
+	int idMemoria = cmpMemObtener(sizeof(struct sala), getpid());
 	int idSemaforo = obtenerSem(pid);
 
 	struct sala *informacionSala = (struct sala*) cmpMemObtenerMemoria(idMemoria);

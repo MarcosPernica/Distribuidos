@@ -4,11 +4,19 @@
 #include "common.h"
 #include "ipc/senal.h"
 #include <vector>
+#include <unistd.h>
+#include "errno.h"
+#include "timeout.h"
 
 sig_atomic_t hijo_vivo = 1;
+sig_atomic_t alarma = 0;
 
 void terminarHijo(int sigint){
 	hijo_vivo = 0;
+}
+
+void alarmHandler(int sigint){
+	alarma = 1;
 }
 
 void quitarAsiento(std::vector<struct reserva> &asientosUsuario, struct reserva asiento)
@@ -21,11 +29,23 @@ void quitarAsiento(std::vector<struct reserva> &asientosUsuario, struct reserva 
 		}
 }
 
+void printColaError(){
+	if (errno != EINTR ){
+		printf("Hijo error en cola de mensajes\n");
+	} else {
+		printf("Exiting..\n");
+	}
+}
+
 void administrarCliente(login login){
 	std::vector<struct reserva> asientosUsuario;
 
-	if (registrarSenal(SIGINT,terminarHijo) == -1){
+	if( registrarSenal(SIGINT,terminarHijo) == -1){
 		printf("Hijo: error al registrar senal");
+		exit(1);
+	}
+	if( registrarSenal(SIGALRM,alarmHandler) == -1 ){
+		printf("Hijo: error al registrar senal timeout");
 		exit(1);
 	}
 	int pid = login.id;
@@ -45,51 +65,52 @@ void administrarCliente(login login){
 	int colaAdmin = obtenerCola(COLA_RECEPCION_ADMIN);
 	int colaEnvioAdmin = obtenerCola(COLA_ENVIO_ADMIN);
 
-	bool reservaDeAsiento = false;
+	bool usuarioSale = false;
+	bool timeOut = false;
 
-	while (hijo_vivo)
+	while (hijo_vivo && !usuarioSale)
 	{
-		if (recibirMensaje(colaRecepcion,pid,(void*)&msg,sizeof(msg)) == -1)
+		ponerAlarma(TIME_OUT_USER);
+		while ( recibirMensaje(colaRecepcion,pid,(void*)&msg,sizeof(msg)) == -1 )
 		{
-			//handle error
-			printf("Hijo error al recibir mensaje");
+			if( ocurrioAlarma(alarma) ){
+				printf("Hubo timeout para %d\n",pid);
+				timeOut = true;
+				mensaje aux;
+				aux.mtype = pid;
+				aux.tipoMensaje = TIMEOUT;
+				aux.idUsuario = pid;
+				msg = aux;
+			} else {
+				printColaError();
+			}
 			break;
 		}
+		cancelarAlarma();
 
-		//Se ve si es una reserva/liberacion de asiento.
-		reservaDeAsiento = msg.tipoMensaje == INTERACCION_ASIENTO;
+		//Se ve si el usuario esta saliendo
+		usuarioSale = msg.tipoMensaje == SALIR_SALA;
 
 		mensaje respuesta;
 		if ( enviarMensaje(colaAdmin,(void*)&msg,sizeof(msg)) == 1 ){
-			printf("Hijo error al enviar al administrador");
+			printColaError();
 			break;
 		}
 		if ( recibirMensaje(colaEnvioAdmin,pid,(void*)&respuesta,sizeof(respuesta)) == -1 ){
-			printf("Hijo error al recibir del administrador");
+			printColaError();
+			break;
+		}
+
+		if ( timeOut ){
 			break;
 		}
 
 		if (enviarMensaje(colaEnvio,(void*)&respuesta,sizeof(respuesta)) == -1)
 		{
-			//handle error
-			printf("Hijo error al enviar mensaje");
+			printColaError();
 			break;
 		}
 
-		//Se guardan los asientos que el usuario reservo asi despues se liberan en el timeout. 
-		if(reservaDeAsiento && respuesta.resultado == RESULTADOOK)
-		{
-			if(msg.asientoS.estado == ASIENTORESERVADO)
-				asientosUsuario.push_back(msg.asientoS);
-			else
-				//Esto es solo para el caso en que quisieramos soportar bajas de asientos (No lo hacemos ahora mismo).
-				quitarAsiento(asientosUsuario, msg.asientoS);
-		}
-		
-		//Si se compro se vacia el vector de asientos reservados.
-		if(msg.tipoMensaje == FINALIZAR_COMPRA && respuesta.resultado == RESULTADOOK)
-			asientosUsuario.clear();
-				
 	}
 	exit(0);
 }

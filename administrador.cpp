@@ -154,7 +154,7 @@ void correrAdministrador(){
 	while(admin_vivo){
 		int result = recibirMensaje(colaRecepcion,(void*)&recibido,sizeof(recibido));
 		if (result == -1){
-			printf("Admin error al obtener cola");
+			printf("Admin error al recibir mensajes\n");
 			break;
 		}
 

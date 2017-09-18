@@ -1,7 +1,7 @@
 CC = g++
 DEBUG = -g -std=c++11
 
-COMMON_DEPENDENCIES = common.h mensajes.h entidades.h ipc/cola.h ipc/semaforo.h ipc/memoriacompartida.h ipc/senal.h baseDeDatos/baseDeDatos.h
+COMMON_DEPENDENCIES = common.h mensajes.h entidades.h timeout.h ipc/cola.h ipc/semaforo.h ipc/memoriacompartida.h ipc/senal.h baseDeDatos/baseDeDatos.h
 COMMON_SRCS= cola.cpp semaforo.cpp memoriacompartida.cpp senal.cpp entidades.cpp
 
 CINE_SRCS= $(COMMON_SRCS) baseDeDatos.cpp cinehijo.cpp  cine.cpp administrador.cpp
@@ -10,7 +10,22 @@ CLIENT_SRCS= $(COMMON_SRCS) clienteAsinc.cpp cliente.cpp
 CINE_OBJS=$(subst .cpp,.o,$(CINE_SRCS))
 CLIENT_OBJS= $(subst .cpp,.o,$(CLIENT_SRCS))
 
-all: client cine
+all: init destroy client cine
+	if [ ! -d ./build/ ]; then mkdir ./build/; fi
+	mv *.o ./build/
+#--------
+init: inicializador.o cola.o
+	$(CC) $(DEBUG) -o init inicializador.o cola.o
+destroy: destructor.o cola.o
+	$(CC) $(DEBUG) -o destroy destructor.o cola.o
+
+destructor.o: destructor/destructor.cpp ipc/cola.h common.h
+	$(CC) $(DEBUG) -c destructor/destructor.cpp
+	
+inicializador.o: inicializador/inicializador.cpp ipc/cola.h common.h
+	$(CC) $(DEBUG) -c inicializador/inicializador.cpp
+
+#------
 
 client: $(CLIENT_OBJS)
 	$(CC) $(DEBUG) -o client $(CLIENT_OBJS)

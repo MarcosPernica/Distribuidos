@@ -1,18 +1,21 @@
-#include "ipc/cola.h"
-#include "ipc/semaforo.h"
-#include "ipc/memoriacompartida.h"
+#include "../ipc/cola.h"
 #include "../common.h"
+#include "stdio.h"
+#include "stdlib.h"
 
-int main(int argc, char* argv)
+void tryCreateCola(int id){
+	if ( crearCola(id) == -1 ){
+		printf("Error al crear cola %d\n",id);
+		exit(1);
+	}
+}
+
+int main(int argc, char** argv)
 {
-	crearCola(COLA_LOGIN_CINE);
-	crearCola(COLA_RECEPCION_CINE);
-	crearCola(COLA_ENVIO_CINE);
-	crearCola(COLA_ASINC_CLIENTE);
-	crearCola(COLA_RECEPCION_ADMIN);
-	crearCola(COLA_ENVIO_ADMIN);
-
-	//crear semaforos
-
-	//crear memoria compartida
+	tryCreateCola(COLA_LOGIN_CINE);
+	tryCreateCola(COLA_RECEPCION_CINE);
+	tryCreateCola(COLA_ENVIO_CINE);
+	tryCreateCola(COLA_ASINC_CLIENTE);
+	tryCreateCola(COLA_RECEPCION_ADMIN);
+	tryCreateCola(COLA_ENVIO_ADMIN);
 }

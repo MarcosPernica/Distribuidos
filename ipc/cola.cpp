@@ -17,7 +17,8 @@ int obtenerCola(int id){
 }
 
 int destruirCola(int id){
-	return (msgctl(id, IPC_RMID, NULL));
+	int cola = obtenerCola(id);
+	return (msgctl(cola, IPC_RMID, NULL));
 }
 
 int enviarMensaje(int colaId,void* data, int length){
