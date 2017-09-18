@@ -20,14 +20,13 @@ void correrAsincronico(int pid){
 
 
 	//Obtiene la memoria compartida y el mutex de la memoria.
-	int idMemoria = cmpMemObtener(sizeof(struct sala), IDMEMORIACOMPARTIDA);
-	int semaforo = obtenerSem(IDMUTEX);
+	int idMemoria = cmpMemObtener(sizeof(struct sala), pid);
+	int semaforo = obtenerSem(pid);
 
 	struct sala *informacionSala = (struct sala*) cmpMemObtenerMemoria(idMemoria);
 	
 	while (asinc_vivo){
 		recibirMensaje(cola,pid,(void *)&mensaje,sizeof(mensaje));
-		printf("hijo cliente recibio evento\n");
 		//Bloquea el acceso al mapa en memoria.
 
 		tomarSem(semaforo);
@@ -39,5 +38,5 @@ void correrAsincronico(int pid){
 		liberarSem(semaforo);
 	}
 
-	cmpMemDestruir(idMemoria, informacionSala);
+	cmpMemDesvincular(informacionSala);
 }

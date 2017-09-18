@@ -37,11 +37,16 @@ int cmpMemObtener(size_t tamano, int idMemoria)
 	return id;
 }
 
+int cmpMemDesvincular(void* memoria){
+	return shmdt(memoria);
+}
+
 int cmpMemDestruir(int idMemoria, void* memoria)
 {
+	int error = shmdt(memoria);
 	shmctl(idMemoria, IPC_RMID, NULL);	
 
-	if(shmdt(memoria) == -1)
+	if( error == -1)
 		return MEMERRORDESTRUIR;
 
 	return MEMOK;

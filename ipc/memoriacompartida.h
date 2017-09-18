@@ -20,6 +20,9 @@ int cmpMemCrear(size_t tamano, int idMemoria);
 /*Obtiene la memoria. Usa para todos la misma ruta de archivo y el idMemoria especificado.*/
 int cmpMemObtener(size_t tamano, int idMemoria);
 
+/*Desvincula la memoria compartida especificada del proceso */
+int cmpMemDesvincular(void* memoria);
+
 /*Destruye y desvincula la memoria compartida especificada.
 Da error tanto si no se puede desvincular como si la memoria no estaba creada.*/
 int cmpMemDestruir(int idMemoria, void *memoria);

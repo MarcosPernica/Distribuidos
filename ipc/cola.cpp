@@ -32,3 +32,7 @@ int recibirMensaje(int colaId, long type ,void* buffer, int length){
 	return msgrcv(colaId,buffer,length-sizeof(long),type,0);
 }
 
+int recibirMensajeAsinc(int colaId, long type ,void* buffer, int length){
+	return msgrcv(colaId,buffer,length-sizeof(long),type,IPC_NOWAIT);
+}
+

@@ -40,6 +40,9 @@ struct salas dbObtenerSalas(const struct db &db);
 
 const asientos &dbObtenerAsientosSala(const struct db &db, unsigned int idSala);
 
+//obtiene la sala del usuario
+int dbObtenerSalaDeUsuario(const struct db &db,int userid);
+
 //Obtiene los usuarios en una sala
 
 std::vector<unsigned int> dbObtenerUsuariosSala(const struct db &db, unsigned int idSala);  

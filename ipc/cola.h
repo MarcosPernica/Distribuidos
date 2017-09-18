@@ -13,4 +13,6 @@ int recibirMensaje(int colaId, void* buffer, int length);
 
 int recibirMensaje(int colaId, long type ,void* buffer, int length);
 
+int recibirMensajeAsinc(int colaId, long type ,void* buffer, int length);
+
 #endif

@@ -55,23 +55,26 @@ void administrarCliente(login login){
 			printf("Hijo error al recibir mensaje");
 			break;
 		}
-		printf("cinehijo recibio msj\n");
 
 		//Se ve si es una reserva/liberacion de asiento.
 		reservaDeAsiento = msg.tipoMensaje == INTERACCION_ASIENTO;
 
 		mensaje respuesta;
-		enviarMensaje(colaAdmin,(void*)&msg,sizeof(msg));
-		printf("envio a async\n");
-		recibirMensaje(colaEnvioAdmin,pid,(void*)&respuesta,sizeof(respuesta));
-		printf("recibio de async\n");
+		if ( enviarMensaje(colaAdmin,(void*)&msg,sizeof(msg)) == 1 ){
+			printf("Hijo error al enviar al administrador");
+			break;
+		}
+		if ( recibirMensaje(colaEnvioAdmin,pid,(void*)&respuesta,sizeof(respuesta)) == -1 ){
+			printf("Hijo error al recibir del administrador");
+			break;
+		}
+
 		if (enviarMensaje(colaEnvio,(void*)&respuesta,sizeof(respuesta)) == -1)
 		{
 			//handle error
 			printf("Hijo error al enviar mensaje");
 			break;
 		}
-		printf("envio a cliente\n");
 
 		//Se guardan los asientos que el usuario reservo asi despues se liberan en el timeout. 
 		if(reservaDeAsiento && respuesta.resultado == RESULTADOOK)

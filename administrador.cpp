@@ -5,6 +5,7 @@
 #include "common.h"
 #include "administrador.h"
 #include "baseDeDatos/baseDeDatos.h"
+#include "errno.h"
 
 sig_atomic_t admin_vivo = 1;
 
@@ -45,6 +46,17 @@ bool enviarMensajeAsincronico(int colaEnvioAsincronico, unsigned int idSala, str
 	return true;
 }
 
+void limpiarCola(int colaEnvio, int idUsuario ){
+	mensaje recibido;
+	bool mensajesEnCola = true;
+	while (mensajesEnCola)
+	{
+		if ( recibirMensajeAsinc(colaEnvio,idUsuario,(void*)&recibido,sizeof(recibido)) == -1 ){
+			mensajesEnCola = false;
+		}
+	}
+}
+
 
 int procesarMensaje(const mensaje &recibido, int colaEnvio, int colaEnvioAsincronico, struct db &baseDeDatos){
 	mensaje respuesta;
@@ -67,9 +79,9 @@ int procesarMensaje(const mensaje &recibido, int colaEnvio, int colaEnvioAsincro
 				respuesta.informacionSala = aux;			
 				break;
 			case INTERACCION_ASIENTO:
-				if(recibido.asientoS.estado == ASIENTORESERVADO)
+				if( recibido.asientoS.estado == ASIENTORESERVADO )
 				{
-					if(!dbReservarAsiento(baseDeDatos, recibido.asientoS))
+					if( !dbReservarAsiento(baseDeDatos, recibido.asientoS) )
 						respuesta.resultado = RESULTADOERROR;
 				}
 				else
@@ -79,23 +91,26 @@ int procesarMensaje(const mensaje &recibido, int colaEnvio, int colaEnvioAsincro
 				enviarMensajeAsincronico(colaEnvioAsincronico, recibido.asientoS.idSala, baseDeDatos);
 				break;
 			case FINALIZAR_COMPRA:
-				if(dbComprarAsientos(baseDeDatos, recibido.fCompra)){
+
+				if( dbComprarAsientos(baseDeDatos, recibido.fCompra) ){
 					respuesta.resultado = RESULTADOOK;
-					enviarMensajeAsincronico(colaEnvioAsincronico, recibido.asientoS.idSala, baseDeDatos);
+					enviarMensajeAsincronico(
+							colaEnvioAsincronico,
+							dbObtenerSalaDeUsuario(baseDeDatos,recibido.fCompra.userid),
+							baseDeDatos);
 				}
 				else
 					respuesta.resultado = RESULTADOERROR;
-
 				break;
-			case TIMEOUT:
+			case TIMEOUT: case SALIR_SALA:
 				dbLiberarAsientos(baseDeDatos, recibido.idUsuario);
 				dbSalirSala(baseDeDatos, recibido.idUsuario);
+				limpiarCola(colaEnvioAsincronico,recibido.idUsuario);
 				break;
 			default:
 				respuesta.resultado = RESULTADOCONSULTAERRONEA;
 				break;
 		}
-	printf("proceso mensaje asincronico cine\n");
 	return enviarMensaje(colaEnvio,(void*)&respuesta,sizeof(respuesta));
 }
 
@@ -142,7 +157,7 @@ void correrAdministrador(){
 			printf("Admin error al obtener cola");
 			break;
 		}
-		printf("recibio mensaje asincronico cine\n");
+
 		if ( procesarMensaje(recibido, colaEnvio, colaEnvioAsincronico, baseDeDatos) < 0){
 			printf("Admin error al enviar respuestas");
 			break;

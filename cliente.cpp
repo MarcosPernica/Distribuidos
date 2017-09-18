@@ -66,8 +66,11 @@ void obtenerDatosLogin(mensaje &login)
 void crearRecursos()
 {
 	//Crea la memoria compartida y el mutex para accederla.
-	cmpMemCrear(sizeof(struct sala), IDMEMORIACOMPARTIDA);
-	if ( crearSem(IDMUTEX, 1) == -1 ){
+	if ( cmpMemCrear(sizeof(struct sala), getpid()) < 0){
+		printf("Ya existia la memoria compartido\n");
+		exit(1);
+	}
+	if ( crearSem(getpid(), 1) == -1 ){
 		printf("Ya existia el semaforo de la memoria compartida\n");
 		exit(1);
 	}
@@ -108,9 +111,7 @@ static mensaje consultarCine(int colaEnvio, int colaRecepcion, mensaje &consulta
 	mensaje respuesta;
 
 	enviarMensaje(colaEnvio,(void *)&consulta,sizeof(mensaje));
-	printf("Envio mensaje a cinehijo\n");
 	recibirMensaje(colaRecepcion,pid,(void*)&respuesta,sizeof(respuesta));
-	printf("Recibio mensaje de cinehijo\n");
 
 	return respuesta;
 }
@@ -156,12 +157,12 @@ static void imprimirSala(struct sala *informacionSala, int idSemaforo){
 	printf("\t ASIENTOS \t\n");
 	printf("  ");
 	for (int i = 0; i < CANTIDADMAXASIENTOS; i++ ){
-		printf("%d ",i + 1);
+		printf("%d ",i);
 	}
 	printf("\n");
 
 	for (int i = 0; i < CANTIDADMAXASIENTOS; i++ ){
-		printf("%d ",i + 1);
+		printf("%d ",i);
 		for (int j = 0; j < CANTIDADMAXASIENTOS; j++){
 			reserva seat = informacionSala->estadoAsientos[i][j];
 			printf("%c ",seat.estado);
@@ -305,6 +306,7 @@ static bool maquinaEstadosCliente(int colaEnvio, int colaRecepcion, int colaLogi
 		//Elige los asientos
 		reservar.asientoS.idSala = pedirSala.salaE.salaid;
 		reservar.asientoS.estado = ASIENTORESERVADO;
+		reservar.asientoS.idUsuario = pid;
 
 		do
 		{
@@ -324,7 +326,7 @@ static bool maquinaEstadosCliente(int colaEnvio, int colaRecepcion, int colaLogi
 		
 		respuesta = consultarCine(colaEnvio, colaRecepcion, comprar, pid);
 		
-		if(respuesta.resultado == RESULTADOCONSULTAERRONEA)
+		if( respuesta.resultado == RESULTADOCONSULTAERRONEA )
 		{
 			eligioCerrar = mostrarMensajeError();
 			continue;
@@ -332,7 +334,10 @@ static bool maquinaEstadosCliente(int colaEnvio, int colaRecepcion, int colaLogi
 
 		eligioCerrar = true;	
 	}
-	
+	mensaje cerrar;
+	cerrar.tipoMensaje = SALIR_SALA;
+	cerrar.idUsuario = pid;
+	consultarCine(colaEnvio,colaRecepcion,cerrar,pid);
 	return true;
 }
 
@@ -348,24 +353,26 @@ int main(int argc, char** argv){
 
 	crearRecursos();
 	int pid = getpid();
-
-	if (fork() == 0){
+	int pidAsincronico = fork();
+	if ( pidAsincronico == 0){
 		correrAsincronico(pid);
+		exit(0);
 	}
 
 	//Obtiene la memoria compartida y el mutex de la memoria.
 	int idMemoria = cmpMemObtener(sizeof(struct sala), IDMEMORIACOMPARTIDA);
-	int idSemaforo = obtenerSem(IDMUTEX);
+	int idSemaforo = obtenerSem(pid);
 
 	struct sala *informacionSala = (struct sala*) cmpMemObtenerMemoria(idMemoria);
 	
 	//Lanza la interfaz en si.
-
 	maquinaEstadosCliente(colaEnvio, colaRecepcion, colaLogin, informacionSala, idSemaforo);
 
+	//finaliza proceso hijo
+	kill(pidAsincronico,SIGINT);
+	wait(NULL);
+
 	//Destruye los recursos
-
 	destruirRecursos(informacionSala, idMemoria, idSemaforo);
-
 	return 0;
 }

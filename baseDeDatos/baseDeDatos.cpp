@@ -45,12 +45,13 @@ bool dbSalirSala(struct db &db, int idUsuario)
 	{
 		auto usuarios = db.usuariosPorSala.equal_range(sala->second);
 		
-		for(auto i = usuarios.first; i != usuarios.second; i++)
-			if(idUsuario == i->second)
+		for(auto i = usuarios.first; i != usuarios.second; i++){
+			if( idUsuario == i->second )
 			{
-				db.salaPorUsuario.erase(i);
+				db.usuariosPorSala.erase(i);
 				break;
 			}
+		}
 		db.salaPorUsuario.erase(idUsuario);
 	}
 	return true;
@@ -71,10 +72,10 @@ bool dbReservarAsiento(struct db &db, const struct reserva &reserva)
 {
 	if(reserva.idSala < db.cantidadSalas && reserva.asiento.x < CANTIDADMAXASIENTOS && reserva.asiento.y < CANTIDADMAXASIENTOS)
 	{
-		if(db.estadoAsientosEnSalas[reserva.idSala][reserva.asiento.y][reserva.asiento.x].estado == ESTADOASIENTOLIBRE)
+		if(db.estadoAsientosEnSalas[reserva.idSala][reserva.asiento.x][reserva.asiento.y].estado == ESTADOASIENTOLIBRE)
 		{
-			db.estadoAsientosEnSalas[reserva.idSala][reserva.asiento.y][reserva.asiento.x] = reserva;
-			db.estadoAsientosEnSalas[reserva.idSala][reserva.asiento.y][reserva.asiento.x].estado = ESTADOASIENTORESERVADO;
+			db.estadoAsientosEnSalas[reserva.idSala][reserva.asiento.x][reserva.asiento.y] = reserva;
+			db.estadoAsientosEnSalas[reserva.idSala][reserva.asiento.x][reserva.asiento.y].estado = ESTADOASIENTORESERVADO;
 			return  true;
 		}
 		return false;
@@ -82,17 +83,27 @@ bool dbReservarAsiento(struct db &db, const struct reserva &reserva)
 	return false;	
 }
 
+
+int dbObtenerSalaDeUsuario(const struct db &db,int userid){
+	auto sala = db.salaPorUsuario.find(userid);
+	if( sala != db.salaPorUsuario.end() )
+	{
+		return sala->second;
+	}
+	return -1;
+}
+
 bool dbComprarAsientos(struct db &db, const struct finalizarCompra &compra)
 {
 	auto sala = db.salaPorUsuario.find(compra.userid);
 
-	if(sala != db.salaPorUsuario.end())
+	if( sala != db.salaPorUsuario.end() )
 	{
 		for(unsigned int i=0;i < CANTIDADMAXASIENTOS; i++)
 			for(unsigned int a = 0; a < CANTIDADMAXASIENTOS; a++)
 			{
 				struct reserva aux = db.estadoAsientosEnSalas[sala->second][i][a];
-				if(aux.idUsuario == compra.userid && aux.estado == ESTADOASIENTORESERVADO)
+				if( aux.idUsuario == compra.userid && aux.estado == ESTADOASIENTORESERVADO )
 				{
 					aux.estado = ESTADOASIENTOCOMPRADO;
 					db.estadoAsientosEnSalas[sala->second][i][a] = aux;
