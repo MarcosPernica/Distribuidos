@@ -1,11 +1,11 @@
 CC = g++
 DEBUG = -g -std=c++11
 
-COMMON_DEPENDENCIES = common.h mensajes.h entidades.h timeout.h ipc/cola.h ipc/semaforo.h ipc/memoriacompartida.h ipc/senal.h baseDeDatos/baseDeDatos.h
+COMMON_DEPENDENCIES = common.h mensajes.h entidades.h timeout.h ipc/cola.h ipc/semaforo.h ipc/memoriacompartida.h ipc/senal.h baseDeDatos/baseDeDatos.h  apiMensajes/apiMensajes.h
 COMMON_SRCS= cola.cpp semaforo.cpp memoriacompartida.cpp senal.cpp entidades.cpp
 
 CINE_SRCS= $(COMMON_SRCS) baseDeDatos.cpp cinehijo.cpp  cine.cpp administrador.cpp
-CLIENT_SRCS= $(COMMON_SRCS) clienteAsinc.cpp cliente.cpp
+CLIENT_SRCS= $(COMMON_SRCS) clienteAsinc.cpp apiMensajes.cpp cliente.cpp
 
 CINE_OBJS=$(subst .cpp,.o,$(CINE_SRCS))
 CLIENT_OBJS= $(subst .cpp,.o,$(CLIENT_SRCS))
@@ -73,6 +73,9 @@ basededatos.o: baseDeDatos/baseDeDatos.cpp baseDeDatos/baseDeDatos.h
 	
 senal.o: ipc/senal.cpp ipc/senal.h
 	$(CC) $(DEBUG) -c ipc/senal.cpp
+
+apiMensajes.o: apiMensajes/apiMensajes.cpp apiMensajes/apiMensajes.h
+	$(CC) $(DEBUG) -c apiMensajes/apiMensajes.cpp 
 
 #------
 		

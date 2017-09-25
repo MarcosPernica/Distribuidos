@@ -12,7 +12,8 @@
 #define TIME_OUT_CONNECTION 10
 
 #include <time.h>
-#include<errno.h>
+#include <errno.h>
+#include <unistd.h>
 
 void ponerAlarma(int tiempo){
 	alarm(tiempo);
