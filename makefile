@@ -5,12 +5,14 @@ COMMON_DEPENDENCIES = common.h mensajes.h entidades.h timeout.h ipc/cola.h ipc/s
 COMMON_SRCS= cola.cpp semaforo.cpp memoriacompartida.cpp senal.cpp entidades.cpp
 
 CINE_SRCS= $(COMMON_SRCS) baseDeDatos.cpp cinehijo.cpp  cine.cpp administrador.cpp
-CLIENT_SRCS= $(COMMON_SRCS) clienteAsinc.cpp apiMensajes.cpp cliente.cpp
+CLIENT_SRCS= $(COMMON_SRCS) apiMensajes.cpp cliente.cpp
+MOM_SRCS= $(COMMON_SRCS) clienteAsinc.cpp mom.cpp mom_run.cpp
 
 CINE_OBJS=$(subst .cpp,.o,$(CINE_SRCS))
 CLIENT_OBJS= $(subst .cpp,.o,$(CLIENT_SRCS))
+MOM_OBJS= $(subst .cpp,.o,$(MOM_SRCS))
 
-all: init destroy client cine
+all: init destroy client cine mom
 	if [ ! -d ./build/ ]; then mkdir ./build/; fi
 	mv *.o ./build/
 #--------
@@ -33,6 +35,9 @@ client: $(CLIENT_OBJS)
 cine: $(CINE_OBJS)
 	$(CC) $(DEBUG) -o cine $(CINE_OBJS)
 
+mom: $(MOM_OBJS)
+	$(CC) $(DEBUG) -o mom $(MOM_OBJS)
+
 #--CINE---
 cine.o: cine.cpp cinehijo.h $(COMMON_DEPENDENCIES) baseDeDatos/baseDeDatos.h administrador.h
 	$(CC) $(DEBUG) -c cine.cpp
@@ -48,12 +53,20 @@ administrador.o: administrador.cpp administrador.h $(COMMON_DEPENDENCIES)
 #-----
 
 #--CLIENTE--
-cliente.o: cliente.cpp clienteAsinc.h $(COMMON_DEPENDENCIES)
+cliente.o: cliente.cpp $(COMMON_DEPENDENCIES)
 	$(CC) $(DEBUG) -c cliente.cpp
 
 clienteAsinc.o: clienteAsinc.cpp clienteAsinc.h $(COMMON_DEPENDENCIES)
 	$(CC) $(DEBUG) -c clienteAsinc.cpp
 #------
+
+#--MOM---
+mom_run.o : mom_run.cpp $(COMMON_DEPENDENCIES) apiMensajes/mom.h
+		$(CC) $(DEBUG) -c mom_run.cpp
+
+mom.o: apiMensajes/mom.cpp apiMensajes/mom.h clienteAsinc.h $(COMMON_DEPENDENCIES)
+	$(CC) $(DEBUG) -c apiMensajes/mom.cpp
+#-----
 
 #---COMMON---
 entidades.o: entidades.cpp entidades.h

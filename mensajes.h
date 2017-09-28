@@ -23,6 +23,10 @@
 
 #define AVISOASINCRONO 12
 
+#define INITMOM 15
+#define DESTROY_MOM 16
+
+
 //mensajes cliente-cine
 struct login {
 	int id;
@@ -46,10 +50,19 @@ struct finalizarCompra {
 	int userid;
 };
 
+//mensajes client-mom
+struct mominit {
+	int pid;
+	int fd;
+};
+
+
+
 struct mensaje{
 	long mtype;
 	int tipoMensaje;
 	char resultado;
+	int fd;
 	union {
 		struct login l;
 		struct loginResponse lresponse;
@@ -58,6 +71,7 @@ struct mensaje{
 		struct sala informacionSala;
 		struct reserva asientoS;
 		struct finalizarCompra fCompra;
+		struct mominit initmom;
 		int idUsuario;
 	};
 };

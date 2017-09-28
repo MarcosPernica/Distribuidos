@@ -1,19 +1,12 @@
 #include <unistd.h>
-#include <sys/wait.h>
-#include "ipc/senal.h"
 #include "common.h"
 #include "mensajes.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include "apiMensajes/apiMensajes.h"
+#include <string.h>
 
-sig_atomic_t vivo = 0;
-
-static void terminar(int sigint){
-	vivo = 1;
-}
-
-void obtenerDatosLogin(mensaje &login)
+void obtenerDatosLogin(login &login)
 {
 	char stdinRead[1024];
 	user user;
@@ -54,10 +47,10 @@ void obtenerDatosLogin(mensaje &login)
 		}
 	} while(true);
 
-	login.l.user = user;
+	login.user = user;
 }
 
-static unsigned int mostrarYElegirSala(const struct pedirSalas &salas)
+static unsigned int mostrarYElegirSala(const struct salas &salas)
 {
 	int entradaIncorrecta = 0;
 	unsigned int opcion = 0;
@@ -69,7 +62,7 @@ static unsigned int mostrarYElegirSala(const struct pedirSalas &salas)
 			printf("Opcion incorrecta. Intente nuevamente.\n");
 
 		printf("Seleccione la sala en la que desea reservar:\n");
-		for(unsigned int i=0; i < salas.salas.totalSalas; i++)
+		for(unsigned int i=0; i < salas.totalSalas; i++)
 		{
 			printf("Sala %d\n",i);
 		}
@@ -77,15 +70,13 @@ static unsigned int mostrarYElegirSala(const struct pedirSalas &salas)
 		printf("Opcion: ");
 		scanf("%d",&opcion);
 	}
-	while(opcion > salas.salas.totalSalas);
+	while(opcion > salas.totalSalas);
 	
 	return opcion;
 }
 
-static void imprimirSala(struct ApiMensajes api){
+static void imprimirSala(sala sala){
 	struct sala informacionSala;
-	APIObtenerActualizacionAsientos(api, informacionSala);
-
 	printf("\t ASIENTOS \t\n");
 	printf("  ");
 	for (int i = 0; i < CANTIDADMAXASIENTOS; i++ ){
@@ -103,28 +94,33 @@ static void imprimirSala(struct ApiMensajes api){
 	}
 }
 
-static struct asiento mostrarYElegirAsiento(struct ApiMensajes &api)
+static bool asientoValido(sala sala, asiento asiento){
+	if( sala.estadoAsientos[asiento.x][asiento.y].estado != ESTADOASIENTOLIBRE )
+		return false;
+	return true;
+}
+
+static struct asiento mostrarYElegirAsiento(sala &sala)
 {
 	int entradaIncorrecta = 0;
-	unsigned int x = 0, y = 0;
+	asiento asiento;
 	do
 	{
 		entradaIncorrecta++;
 		system("clear");
-		imprimirSala(api);
+		imprimirSala(sala);
 		if(entradaIncorrecta > 2)
 			printf("Asiento no valido. Intente nuevamente.\n");
 
 		printf("Seleccione el asiento que desea reservar:\n");
 		fflush(stdin);
 		printf("Asiento (fila,columna): ");
-		scanf("%d %d",&x, &y);
+		scanf("%d %d",&asiento.x, &asiento.y);
 	}
-	while((x > CANTIDADMAXASIENTOS || y > CANTIDADMAXASIENTOS) && !asientoValido(api, x, y));
-
-	struct asiento seleccion{x,y};
+	while((asiento.x > CANTIDADMAXASIENTOS || asiento.y > CANTIDADMAXASIENTOS)
+			&& !asientoValido(sala, asiento));
 	
-	return seleccion;
+	return asiento;
 }
 
 static bool mostrarMensajeError()
@@ -173,20 +169,16 @@ static bool mostrarMenuMasReservas()
 
 static bool maquinaEstadosCliente()
 {
-	struct ApiMensajes api;
-	if(!APIInit(api,getpid()))
+	int fd = APIInit(getpid());
+	if( fd == -1 )
 		return false;
-
-	mensaje reservar;	
-	mensaje respuesta;
-	mensaje login;
+	login login;
 
 	bool eligioCerrar = false;
-	int pid = getpid();
 
 	obtenerDatosLogin(login);
 
-	if(!APILogin(api,login))
+	if(!APILogin(fd,login))
 	{
 		printf("Error al autenticar con servidor.\n");
 		return false;
@@ -196,31 +188,30 @@ static bool maquinaEstadosCliente()
 	while(!eligioCerrar)
 	{
 		//Pide las salas.
-		mensaje salas;
-		if(!APIPedirSalas(api,salas))
+		salas salas;
+		if(!APIPedirSalas(fd,salas))
 		{
 			eligioCerrar = mostrarMensajeError();
 			continue;
 		}
 
 		//Envia la seleccion del usuario y recibe el estado de la sala.
-		mensaje sala;
-
-		if(!APIPedirAsientosSala(api, mostrarYElegirSala(salas.salaP), sala))
+		sala sala;
+		if(!APIPedirAsientosSala(fd, mostrarYElegirSala(salas), sala))
 		{
 			eligioCerrar = mostrarMensajeError();
 			continue;
 		}
 
 		bool masReservas = true;
-
+		asiento asiento;
 		do
 		{
-			reservar.asientoS.asiento = mostrarYElegirAsiento(api);
-		
-			if(!APIElegirAsiento(api, reservar))
+			asiento = mostrarYElegirAsiento(sala);
+			if(!APIElegirAsiento(fd, asiento)){
 				printf("Error al reservar el asiento, ya estaba reservado.");
-			
+			}
+			APIObtenerActualizacionAsientos(fd,sala);
 			//Muestra el menu
 			masReservas = mostrarMenuMasReservas();
 		}
@@ -228,7 +219,7 @@ static bool maquinaEstadosCliente()
 
 		//Finaliza la compra
 		
-		if(!APIFinalizarCompra(api))
+		if(!APIFinalizarCompra(fd))
 		{
 			eligioCerrar = mostrarMensajeError();
 			continue;
@@ -236,15 +227,11 @@ static bool maquinaEstadosCliente()
 
 		eligioCerrar = true;	
 	}
-	APIDeinit(api);
+	APIDeinit(fd);
 	return true;
 }
 
 int main(int argc, char** argv){
-	if( registrarSenal(SIGINT,terminar) == -1){
-		printf("Cliente: error al registrar senal");
-		exit(1);
-	}
 
 	//Lanza la interfaz en si.
 	maquinaEstadosCliente();

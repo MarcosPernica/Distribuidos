@@ -10,4 +10,6 @@
 #define COLA_ASINC_CLIENTE 4
 #define COLA_ENVIO_ADMIN 5
 
+#define COLA_CLIENT_MOM 6
+#define COLA_MOM_CLIENT 7
 #endif
