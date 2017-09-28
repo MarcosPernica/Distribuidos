@@ -19,6 +19,7 @@ struct asiento{
 	unsigned int y;
 };
 
+
 bool operator==(struct asiento& a, struct asiento& b);
 
 struct reserva
@@ -32,6 +33,8 @@ struct reserva
 
 //Me di cuenta de que el campo cantidad de asientos se podia eliminar y entonces 'asientos' era simplemente 'reserva[CANTIDADMAXASIENTOS][CANTIDADMAXASIENTOS]'
 typedef reserva asientos[CANTIDADMAXASIENTOS][CANTIDADMAXASIENTOS];
+
+void copiarAsientos(asientos &destino, const asientos &origen);
 
 struct sala{
 	asientos estadoAsientos;

@@ -15,46 +15,54 @@ void terminar(int sigint){
 	mom_vivo = 1;
 }
 
-mensaje procesarMensaje(MOM &mom, mensaje lectura)
+bool procesarMensaje(MOM &mom, mensaje lectura, mensaje& respuesta)
 {
 	int fd = lectura.fd;
-	mensaje respuesta;
 	respuesta.mtype = lectura.mtype;
-	respuesta.resultado = 0;
+	bool resultado = true;
 	switch( lectura.tipoMensaje ){
 		case INITMOM:
 			respuesta.initmom.fd = MOMInitClient(mom,lectura.initmom.pid);
 			break;
 		case DESTROY_MOM: case SALIR_SALA:
-			respuesta.resultado = MOMDeinit(mom,fd);
+			resultado = MOMDeinit(mom,fd);
 			break;
 		case LOGIN:
-			respuesta.resultado = MOMLogin(mom,fd,lectura.l);
+			resultado = MOMLogin(mom,fd,lectura.l);
 			break;
 		case PEDIR_SALAS:
 			salas salas;
-			respuesta.resultado = MOMPedirSalas(mom,fd,salas);
+			resultado = MOMPedirSalas(mom,fd,salas);
 			respuesta.salaP.salas = salas;
 			break;
 		case ELEGIR_SALA:
 			sala sala;
-			respuesta.resultado = MOMPedirAsientosSala(mom,fd,lectura.salaE.salaid,sala);
-			respuesta.informacionSala = sala;
+			resultado = MOMPedirAsientosSala(mom,fd,lectura.salaE.salaid,sala);
+			respuesta.informacionSala.id = sala.id;
+			copiarAsientos(respuesta.informacionSala.estadoAsientos,sala.estadoAsientos);
+			break;
+		case ACTUALIZAR_ASIENTOS:
+			resultado = MOMObtenerActualizacionAsientos(mom,fd,sala);
+			respuesta.informacionSala.id = sala.id;
+			copiarAsientos(respuesta.informacionSala.estadoAsientos,sala.estadoAsientos);
 			break;
 		case INTERACCION_ASIENTO:
-			respuesta.resultado = MOMElegirAsiento(mom,fd,lectura.asientoS.asiento);
+			resultado = MOMElegirAsiento(mom,fd,lectura.asientoS.asiento);
 			break;
 		case FINALIZAR_COMPRA:
-			respuesta.resultado = MOMFinalizarCompra(mom,fd);
+			resultado = MOMFinalizarCompra(mom,fd);
 			break;
 	}
-	return respuesta;
+	respuesta.resultado = resultado ? RESULTADOOK : RESULTADOERROR;
+	return resultado;
 }
 
 void MOMDestroy(MOM &mom){
+	printf("destroin mom\n");
 	std::map<int,MOMClient>::iterator it = mom.clients.begin();
 	while(it != mom.clients.end()){
 		MOMDeinit(mom,it->first);
+		it++;
 	}
 	mom.clients.clear();
 }
@@ -78,12 +86,13 @@ int main(int argc, char** argv){
 		if( recibirMensaje(colaLectura,(void*)&lectura,sizeof(mensaje)) == -1){
 			break;
 		}
-		respuesta = procesarMensaje(mom,lectura);
+
+		procesarMensaje(mom,lectura, respuesta);
+
 		if( enviarMensaje(colaEscritura,(void*)&respuesta,sizeof(mensaje)) == -1){
 			break;
 		}
 	}
-	//should kill all asinc..
 	MOMDestroy(mom);
 	return 0;
 }

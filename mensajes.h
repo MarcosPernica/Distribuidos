@@ -19,12 +19,14 @@
 
 #define RESULTADOOK 9
 #define RESULTADOCONSULTAERRONEA 10
-#define RESULTADOERROR 11
+#define RESULTADOERROR -1
 
 #define AVISOASINCRONO 12
 
 #define INITMOM 15
 #define DESTROY_MOM 16
+
+#define ACTUALIZAR_ASIENTOS 17
 
 
 //mensajes cliente-cine

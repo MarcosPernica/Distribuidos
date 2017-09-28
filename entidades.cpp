@@ -13,3 +13,10 @@ bool operator==(struct asiento& a, struct asiento& b)
 }
 
 
+void copiarAsientos(asientos &destino, const asientos &origen)
+{
+	for(unsigned int i = 0; i< CANTIDADMAXASIENTOS; i++)
+		for(unsigned int a = 0; a < CANTIDADMAXASIENTOS; a++)
+			destino[i][a] = origen[i][a];
+}
+

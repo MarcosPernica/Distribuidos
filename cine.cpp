@@ -7,6 +7,7 @@
 #include "cinehijo.h"
 #include "administrador.h"
 #include "baseDeDatos/baseDeDatos.h"
+#include "errno.h"
 
 sig_atomic_t vivo = 0;
 
@@ -77,7 +78,8 @@ int main(int argc,char** argv)
 		loginResponse.resultado = RESULTADOOK;
 		if ( enviarMensaje(colaRespuesta,(void*)&loginResponse,sizeof(loginResponse)) == -1 )
 		{
-			printf("Error al enviar datos \n");
+			perror("Error: ");
+			printf("Error al enviar datos de login \n");
 			break;
 		}
 	}

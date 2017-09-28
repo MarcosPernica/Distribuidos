@@ -13,15 +13,14 @@ static int consultarMOM(mensaje &consulta,int id, mensaje &respuesta)
 	int colaRecepcion = obtenerCola(COLA_MOM_CLIENT);
 
 	if ( enviarMensaje(colaEnvio,(void *)&consulta,sizeof(mensaje)) == -1 ){
-		printf("Error enviando mensaje al cine\n");
+		printf("Error enviando mensaje al mom\n");
 		return -1;
 	}
 
-	if (recibirMensaje(colaRecepcion,id, (void *)&respuesta,sizeof(mensaje)) == -1){
-		printf("Error enviando mensaje al cine\n");
+	if (recibirMensaje(colaRecepcion, id, (void *)&respuesta,sizeof(mensaje)) == -1){
+		printf("Error enviando mensaje al mom\n");
 		return -1;
 	}
-
 	return 0;
 }
 
@@ -79,14 +78,26 @@ bool APIPedirAsientosSala(int fd, int idSala,struct sala &estadoAsientos)
 	if( respuesta.resultado < 0 ){
 		return false;
 	}
-	estadoAsientos = respuesta.informacionSala;
+	estadoAsientos.id = respuesta.informacionSala.id;
+	copiarAsientos(estadoAsientos.estadoAsientos,respuesta.informacionSala.estadoAsientos);
 	return true;
 }
 
 //Obtiene el estado de los asientos.
 bool APIObtenerActualizacionAsientos(int fd, struct sala &estadoAsientos)
 {
-	return APIPedirAsientosSala(fd,estadoAsientos.id,estadoAsientos);
+	mensaje init;
+	mensaje respuesta;
+	init.fd = fd;
+	init.mtype = getpid();
+	init.tipoMensaje = ACTUALIZAR_ASIENTOS;
+	consultarMOM(init,getpid(),respuesta);
+	if( respuesta.resultado < 0 ){
+		return false;
+	}
+	estadoAsientos.id = respuesta.informacionSala.id;
+	copiarAsientos(estadoAsientos.estadoAsientos,respuesta.informacionSala.estadoAsientos);
+	return true;
 }
 
 bool APIElegirAsiento(int fd,struct asiento &asiento)

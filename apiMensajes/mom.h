@@ -31,7 +31,7 @@ struct MOM {
 };
 
 //Inicializa el mom
-int MOMInit(MOM &mom);
+bool MOMInit(MOM &mom);
 
 //Inicializa un cliente nuevo en el mom
 int MOMInitClient(MOM &mom ,int ID);

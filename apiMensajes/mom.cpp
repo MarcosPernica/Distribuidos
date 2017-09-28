@@ -22,18 +22,18 @@ static int consultarCine(int colaEnvio, int colaRecepcion, mensaje &consulta, in
 {
 
 	if ( enviarMensaje(colaEnvio,(void *)&consulta,sizeof(mensaje)) == -1 ){
-		printf("Error enviando mensaje al cine\n");
 		return -1;
 	}
 
 	ponerAlarma(TIME_OUT_CONNECTION);
-	if (recibirMensaje(colaRecepcion,pid, (void *)&respuesta,sizeof(mensaje)) == -1){
+	if( recibirMensaje(colaRecepcion,pid, (void *)&respuesta,sizeof(mensaje)) == -1 ){
 
-		if (ocurrioAlarma(alarma)){
+		if( ocurrioAlarma(alarma) ){
 			printf("Timeout client\n");
 			recibirMensajeAsinc(colaEnvio,pid,(void*)&respuesta,sizeof(mensaje));
+			respuesta.resultado = RESULTADOERROR;
 		} else {
-			printf("Error enviando mensaje al cine\n");
+			printf("Error recibiendo mensaje al cine\n");
 		}
 		return -1;
 	}
@@ -42,7 +42,7 @@ static int consultarCine(int colaEnvio, int colaRecepcion, mensaje &consulta, in
 	return 0;
 }
 
-int MOMInit(MOM &mom)
+bool MOMInit(MOM &mom)
 {
 	mom.lastFD = 0;
 	mom.colaLogin = obtenerCola(COLA_LOGIN_CINE);
@@ -50,10 +50,10 @@ int MOMInit(MOM &mom)
 	mom.colaRecepcion = obtenerCola(COLA_ENVIO_CINE);
 	if( mom.colaLogin == -1 || mom.colaEnvio == -1 || mom.colaRecepcion == -1)
 	{
-		return -1;
+		return false;
 	}
 
-	return 0;
+	return true;
 }
 
 int MOMInitClient(MOM &mom, int ID)
@@ -97,9 +97,9 @@ bool MOMLogin(MOM &mom,int fd, struct login &login)
 		return false;
 
 	mensaje envio;
+	login.id = client.pid;
 	envio.mtype = LOGIN_TYPE;
 	envio.l = login;
-	login.id = client.pid;
 
 	mensaje respuesta;
 	if ( consultarCine(mom.colaLogin, mom.colaRecepcion, envio, login.id, respuesta) == -1 ){
@@ -152,7 +152,7 @@ bool MOMPedirAsientosSala(MOM &mom,int fd, int idSala, struct sala &estadoAsient
 	pedirSala.tipoMensaje = ELEGIR_SALA;
 	pedirSala.salaE.salaid = idSala;
 	mensaje respuesta;
-	if(consultarCine(mom.colaEnvio, mom.colaRecepcion, pedirSala, client.pid, respuesta) == -1){
+	if( consultarCine(mom.colaEnvio, mom.colaRecepcion, pedirSala, client.pid, respuesta) == -1){
 		return false;
 	}
 
@@ -163,7 +163,8 @@ bool MOMPedirAsientosSala(MOM &mom,int fd, int idSala, struct sala &estadoAsient
 	client.salaActual = idSala;
 	mom.clients[fd] = client;
 
-	estadoAsientos = respuesta.informacionSala;
+	copiarAsientos(estadoAsientos.estadoAsientos, respuesta.informacionSala.estadoAsientos);
+	estadoAsientos.id = respuesta.informacionSala.id;
 	return true;
 }
 
@@ -254,11 +255,8 @@ bool MOMDeinit(MOM &mom, int fd)
 	cerrar.tipoMensaje = SALIR_SALA;
 	cerrar.idUsuario = client.pid;
 
-	if( consultarCine(mom.colaEnvio, mom.colaRecepcion, cerrar, client.pid, respuesta) == -1)
-		return false;
-
-	if( respuesta.resultado == RESULTADOCONSULTAERRONEA )
-		return false;
+	//envia salio de sala
+	consultarCine(mom.colaEnvio, mom.colaRecepcion, cerrar, client.pid, respuesta);
 
 	//Finaliza proceso hijo
 	kill(client.pidAsincrono,SIGINT);

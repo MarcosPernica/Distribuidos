@@ -145,7 +145,7 @@ static bool mostrarMensajeError()
 	return opcion;
 }
 
-static bool mostrarMenuMasReservas()
+static bool mostrarMenuMasReservas(bool huboError)
 {
 	int entradaIncorrecta = 0;
 	unsigned opcion = 0;
@@ -153,6 +153,9 @@ static bool mostrarMenuMasReservas()
 	{
 		entradaIncorrecta++;
 		system("clear");
+		if( huboError ){
+			printf("Error al reservar el asiento, ya estaba reservado.\n");
+		}
 		if(entradaIncorrecta > 2)
 			printf("Opcion incorrecta. Intente nuevamente.\n");
 
@@ -177,19 +180,17 @@ static bool maquinaEstadosCliente()
 	bool eligioCerrar = false;
 
 	obtenerDatosLogin(login);
-
-	if(!APILogin(fd,login))
+	if( ! APILogin(fd,login) )
 	{
 		printf("Error al autenticar con servidor.\n");
 		return false;
 	}
 
-
 	while(!eligioCerrar)
 	{
 		//Pide las salas.
 		salas salas;
-		if(!APIPedirSalas(fd,salas))
+		if( ! APIPedirSalas(fd,salas) )
 		{
 			eligioCerrar = mostrarMensajeError();
 			continue;
@@ -204,16 +205,19 @@ static bool maquinaEstadosCliente()
 		}
 
 		bool masReservas = true;
+		bool errorReserva;
 		asiento asiento;
 		do
 		{
 			asiento = mostrarYElegirAsiento(sala);
-			if(!APIElegirAsiento(fd, asiento)){
-				printf("Error al reservar el asiento, ya estaba reservado.");
+			errorReserva = false;
+			if( ! APIElegirAsiento(fd, asiento) )
+			{
+				errorReserva = true;
 			}
 			APIObtenerActualizacionAsientos(fd,sala);
 			//Muestra el menu
-			masReservas = mostrarMenuMasReservas();
+			masReservas = mostrarMenuMasReservas(errorReserva);
 		}
 		while(masReservas);
 
