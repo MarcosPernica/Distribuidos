@@ -76,7 +76,6 @@ static unsigned int mostrarYElegirSala(const struct salas &salas)
 }
 
 static void imprimirSala(sala sala){
-	struct sala informacionSala;
 	printf("\t ASIENTOS \t\n");
 	printf("  ");
 	for (int i = 0; i < CANTIDADMAXASIENTOS; i++ ){
@@ -87,7 +86,7 @@ static void imprimirSala(sala sala){
 	for (int i = 0; i < CANTIDADMAXASIENTOS; i++ ){
 		printf("%d ",i);
 		for (int j = 0; j < CANTIDADMAXASIENTOS; j++){
-			reserva seat = informacionSala.estadoAsientos[i][j];
+			reserva seat = sala.estadoAsientos[i][j];
 			printf("%c ",seat.estado);
 		}
 		printf("\n");

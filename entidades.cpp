@@ -6,6 +6,7 @@
  */
 
 #include "entidades.h"
+#include <stdio.h>
 
 bool operator==(struct asiento& a, struct asiento& b)
 {
