@@ -9,6 +9,8 @@ int main(int argc, char** argv)
 	destruirCola(COLA_ASINC_CLIENTE);
 	destruirCola(COLA_RECEPCION_ADMIN);
 	destruirCola(COLA_ENVIO_ADMIN);
+	destruirCola(COLA_MOM_CLIENT);
+	destruirCola(COLA_CLIENT_MOM);
 }
 
 

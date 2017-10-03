@@ -18,4 +18,6 @@ int main(int argc, char** argv)
 	tryCreateCola(COLA_ASINC_CLIENTE);
 	tryCreateCola(COLA_RECEPCION_ADMIN);
 	tryCreateCola(COLA_ENVIO_ADMIN);
+	tryCreateCola(COLA_MOM_CLIENT);
+	tryCreateCola(COLA_CLIENT_MOM);
 }
