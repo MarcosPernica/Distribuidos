@@ -171,7 +171,7 @@ static bool mostrarMenuMasReservas(bool huboError)
 
 static bool maquinaEstadosCliente()
 {
-	int fd = APIInit(getpid());
+	int fd = APIInit();
 	if( fd == -1 )
 		return false;
 	login login;

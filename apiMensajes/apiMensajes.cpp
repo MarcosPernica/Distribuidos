@@ -24,7 +24,7 @@ static int consultarMOM(mensaje &consulta,int id, mensaje &respuesta)
 	return 0;
 }
 
-int APIInit(int ID)
+int APIInit()
 {
 	mensaje init;
 	mensaje respuesta;

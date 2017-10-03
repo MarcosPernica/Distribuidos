@@ -4,7 +4,7 @@
 #include "../mensajes.h" 
 
 //Inicializa todo lo necesario para poder comunicarse utilizando la API.
-int APIInit(int ID);
+int APIInit();
 
 //Se logea al sistema.
 bool APILogin(int fd, struct login &login);
