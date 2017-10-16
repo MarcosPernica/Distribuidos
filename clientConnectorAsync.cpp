@@ -1,42 +1,31 @@
+/*
+ * clientConnectorAsync.cpp
+ *
+ *  Created on: Oct 10, 2017
+ *      Author: tobias
+ */
 #include "ipc/socket.h"
 #include "ipc/cola.h"
 #include "ipc/senal.h"
 #include "mensajes.h"
-#include "paramsParser.h"
 #include <vector>
 
-#define DEFAULT_PORT 9999
-
-sig_atomic_t estaVivo = 0;
+sig_atomic_t vivo = 0;
 
 void terminar(int signal)
 {
-	estaVivo = 1;
+	vivo = 1;
 }
 
-void handleClient(int socket, struct sockaddr_in cli){
-	int colaEnvioACine = obtenerCola(1);
-	int colaRecibirDeCine = obtenerCola(2);
-	//TODO buff size
-	int BUFF_SIZE = 1024;
-	char buffer[1024];
 
-	while( estaVivo == 0 )
-	{
-		if( leerSocket(socket,buffer,BUFF_SIZE) == -1 ){
-			perror("No pudo leer ");
-			break;
-		}
-		//deserializar
-		//enviarMensaje();
-		//recibirCola();
-		//serializar
-		if( escribirSocket(socket, buffer, BUFF_SIZE) == -1){
-			perror("No pudo escribir en socket ");
-			break;
-		}
+void handleAsync(int socketfd, sockaddr_in cli){
+	char buffer[1024];
+	int cola = obtenerCola(1); //tiene que ser la asincronica
+	while( leerSocket(socketfd,buffer,1024) != -1 && vivo == 0){
+		mensaje mensaje;
+		//deserialiar mensaje
+		enviarMensaje(cola,(void*)&mensaje,sizeof(mensaje));
 	}
-	close(socket);
 }
 
 int main(int argc, char** argv)
@@ -47,12 +36,11 @@ int main(int argc, char** argv)
 	}
 
 	std::vector<int> hijos;
-	int port = DEFAULT_PORT;
+	int port = 8000;
 	if( argc != 2 ){
-		printf("No port specified taking default port %i\n",port);
-	} else if( parsePort(argv[1], &port) ){
-		printf("Puerto a usar: %i\n",port);
+		printf("No port specified taking default port %d\n",port);
 	}
+	//argv 1 : port
 
 	int socket_server = crearSocketServer(port);
 	if( socket_server == -1){
@@ -75,7 +63,8 @@ int main(int argc, char** argv)
 		if( (childpid = fork()) == 0 )
 		{
 			close(server_socket);
-			handleClient(client, cli);
+			handleAsync(client, cli);
+			close(client);
 			exit(0);
 		}
 		hijos.push_back(childpid);
@@ -92,8 +81,9 @@ int main(int argc, char** argv)
 	while( hijos.size() > 0)
 	{
 		waitpid(hijos[0],NULL,0);
-		hijos.erase(hijos.begin());
+		hijos.pop_back();
 	}
 	close(server_socket);
 	return 0;
 }
+

@@ -12,4 +12,9 @@
 
 #define COLA_CLIENT_MOM 6
 #define COLA_MOM_CLIENT 7
+
+#define DEFAULT_CINE_PORT 8000
+#define DEFAULT_CLIENT_ASYNC_PORT 8010
+
+#define BUFF_SIZE 1024
 #endif
