@@ -8,9 +8,13 @@
 #ifndef SERIALIZADOR_H_
 #define SERIALIZADOR_H_
 #include "mensajes.h"
+#include <string>
 
-bool serializar(mensaje msg,char* seralizado);
+#define SEPARADOR '|'
 
-bool desserializar(char* msg,int length,mensaje *deseralizado);
+//El parametro 'peticion' sirve para determinar si el mensaje es el primero de la interaccion o el segundo(Se usa el mismo tipo de mensaje pero cambia la estructura). 
+bool serializar(const mensaje &msg, std::string &serializado, bool peticion = true);
+
+bool desserializar(std::string &serializado, mensaje &desserializado, bool peticion = true);
 
 #endif /* SERIALIZADOR_H_ */

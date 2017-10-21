@@ -98,7 +98,7 @@ bool MOMLogin(MOM &mom,int fd, struct login &login)
 
 	mensaje envio;
 	login.id = client.pid;
-	envio.mtype = LOGIN_TYPE;
+	envio.mtype = LOGIN;
 	envio.l = login;
 
 	mensaje respuesta;

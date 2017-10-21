@@ -13,7 +13,6 @@ bool operator==(struct asiento& a, struct asiento& b)
 	return a.x == b.x && a.y == b.y;
 }
 
-
 void copiarAsientos(asientos &destino, const asientos &origen)
 {
 	for(unsigned int i = 0; i< CANTIDADMAXASIENTOS; i++)

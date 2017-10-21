@@ -66,13 +66,13 @@ struct mensaje{
 	char resultado;
 	int fd;
 	union {
-		struct login l;
-		struct loginResponse lresponse;
-		struct pedirSalas salaP;
-		struct elegirSala salaE;
-		struct sala informacionSala;
-		struct reserva asientoS;
-		struct finalizarCompra fCompra;
+		struct login l; //Corresponde a LOGIN.
+		struct loginResponse lresponse; //Corresponde a LOGIN_RESPONSE.
+		struct pedirSalas salaP; //Corresponde a PEDIR_SALAS.
+		struct elegirSala salaE; //Corresponde al mensaje de ida de ELEGIR_SALA (Es cuando se piden todos los asientos)
+		struct sala informacionSala; //Corresponde al mensaje de vuelta de ELEGIR_SALA (Es cuando se devuelven todos los asientos). Tambien a AVISOASINCRONO 
+		struct reserva asientoS; //Corresponde a INTERACCION_ASIENTOS.
+		struct finalizarCompra fCompra; //Corresponde a FINALIZAR_COMPRA.
 		struct mominit initmom;
 		int idUsuario;
 	};
