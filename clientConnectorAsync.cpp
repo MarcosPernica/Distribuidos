@@ -9,6 +9,7 @@
 #include "ipc/senal.h"
 #include "mensajes.h"
 #include <vector>
+#include "paramsParser.h"
 
 sig_atomic_t vivo = 0;
 
@@ -37,10 +38,11 @@ int main(int argc, char** argv)
 
 	std::vector<int> hijos;
 	int port = 8000;
-	if( argc != 2 ){
+	if( argc == 2  &&  parsePort(argv[1],&port) ){
+		printf("Port selected: %d \n", port);
+	} else if( ){
 		printf("No port specified taking default port %d\n",port);
 	}
-	//argv 1 : port
 
 	int socket_server = crearSocketServer(port);
 	if( socket_server == -1){

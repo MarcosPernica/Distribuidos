@@ -8,47 +8,67 @@
 #include "ipc/cola.h"
 #include "ipc/senal.h"
 #include "mensajes.h"
+#include "common.h"
+#include "cineAsyncHandler/cineAsyncHandler.h"
 #include <vector>
+#include <map>
+
+
+int obtenerSocket(long id, struct socketMapper* memoriaCompartida, std::map<std::string, int> *sockets)
+{
+	std::string address = getClientSocket(memoriaCompartida, id);
+	if( address != NULL && sockets[address] != NULL ){
+		return sockets[address];
+	} else {
+		//create socket
+	}
+	return -1;
+}
+
+void procesarMensaje(mensaje msg, struct socketMapper* memoriaCompartida, std::map<std::string, int> *sockets )
+{
+	char buffer[BUFF_SIZE];
+	switch(msg.tipoMensaje)
+	{
+	case AVISOASINCRONO:
+		int socket;
+		if( (socket = obtenerSocket(msg.mtype, memoriaCompartida, sockets)) != -1 )
+		{
+			//TODO serializar
+			if( escribirSocket( socket, buffer, BUFF_SIZE ) == -1 ){
+				printf("No pudo enviar a socket\n");
+				break;
+			}
+		}
+		break;
+	case SOCKETS_ASYNC_UPDATE:
+		//cerrar un socket particular!!!
+		break;
+	}
+}
 
 int main(int argc, char** argv)
 {
-	char host[16] = "127.0.0.1";
-	int port = 8000;
-	//argv 1: host
-	//argv 2 : port TODO read from args
+	std::map<std::string, int> sockets;
+	int colaRecibir = obtenerCola(COLA_ASINC_CLIENTE);
+	//TODO pedir memoria compartida
 
-	//obtener colas a leer,escribir
-	int colaRecibir = obtenerCola(1);
+	int socket;
 
-	int socket = crearSocketCliente(host, port);
-	if( socket == -1 )
-	{
-		perror("No pudo conectarse");
-		exit(1);
-	}
-
-	int BUFF_SIZE = 1024;
-	char buffer[BUFF_SIZE];
+	struct socketMapper* memoriaCompartida;
+	mensaje msg;
 	while( vivo == 0 )
 	{
-		//leerCola
-		//serializar
-		if( escribirSocket( socket, buffer, BUFF_SIZE ) == -1 ){
-			printf("No pudo enviar a socket\n");
-			//enviar respuesta por cola
+
+		if( recibirMensaje(colaRecibir,&msg,sizeof(mensaje) ) == -1){
+			printf("Error recibiendo mensaje de cola \n");
 			break;
 		}
 
-		if( leerSocket(socket, buffer, BUFF_SIZE) == -1 ){
-			printf("No pudo leer del socket\n");
-			//enviar respuesta por cola
-			break;
-		}
-		//deserializar
-		//enviar a cola
-
+		procesarMensaje(msg,memoriaCompartida, &sockets);
 	}
-	close(socket);
 
+
+	//TODO detroy all
 	return 0;
 }

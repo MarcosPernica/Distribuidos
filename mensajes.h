@@ -28,6 +28,7 @@
 
 #define ACTUALIZAR_ASIENTOS 17
 
+#define SOCKETS_ASYNC_UPDATE 18
 
 //mensajes cliente-cine
 struct login {
