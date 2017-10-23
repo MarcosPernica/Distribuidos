@@ -12,7 +12,7 @@ CINE_OBJS=$(subst .cpp,.o,$(CINE_SRCS))
 CLIENT_OBJS= $(subst .cpp,.o,$(CLIENT_SRCS))
 MOM_OBJS= $(subst .cpp,.o,$(MOM_SRCS))
 
-all: init destroy client cine mom
+all: init destroy client cine mom idGiver
 	if [ ! -d ./build/ ]; then mkdir ./build/; fi
 	mv *.o ./build/
 #--------
@@ -26,6 +26,9 @@ destructor.o: destructor/destructor.cpp ipc/cola.h common.h
 	
 inicializador.o: inicializador/inicializador.cpp ipc/cola.h common.h
 	$(CC) $(DEBUG) -c inicializador/inicializador.cpp
+
+idGiver.o: idGiver.cpp
+	$(CC) $(DEBUG) -c idGiver serializador
 
 #------
 

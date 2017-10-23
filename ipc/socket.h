@@ -8,6 +8,8 @@
 #ifndef SOCKET_H_
 #define SOCKET_H_
 
+#include <string>
+
 int crearSocketCliente(std::string host, int port);
 
 int crearSocketCliente(struct sockaddr address, int len);

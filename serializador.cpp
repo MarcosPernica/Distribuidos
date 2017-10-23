@@ -126,6 +126,14 @@ bool serializar(const mensaje &msg, std::string &serializado, bool peticion){
 	return true;
 }
 
+bool serializar(const int numero, std::string &serializado)
+{
+	std::stringstream serial;
+	serial << numero;
+	std::getline(serial, serializado);
+	return true;
+}
+
 static std::vector<std::string> cortarString(const std::string &serial)
 {
 	std::vector<std::string> partes;
@@ -238,6 +246,12 @@ bool desserializar(std::string &serializado, mensaje &desserializado, bool petic
 		default:
 			return false;
 	}
+	return true;
+}
+
+bool desserializar(std::string &serializado, int &numero)
+{
+	numero = aLong(serializado);
 	return true;
 }
 

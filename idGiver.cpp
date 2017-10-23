@@ -7,14 +7,17 @@
 
 #include "ipc/socket.h"
 #include "ipc/senal.h"
+#include <string>
+#include "serializador.h"
+#include <unistd.h>
+#include <sys/socket.h>
+#include <sys/types.h>
+#include <netinet/in.h>
+#include <netinet/ip.h>
 
 sig_atomic_t vivo = 0;
 void terminar(int sigint){
 	vivo = 1;
-}
-
-void serializarInt(int valor, char* buff){
-
 }
 
 int main(int argc, char**argv){
@@ -23,13 +26,18 @@ int main(int argc, char**argv){
 		exit(1);
 	}
 
-	int id = 1;
-
 	int port = 27772;
+	int id = 1;
 	if( argc != 2 ){
 		printf("No port specified taking default port %d\n",port);
 	}
-	//argv 1 : port
+	else
+	{
+		std::string puertoArg(argv[1]);
+		desserializar(puertoArg, port);
+	}
+	
+	
 
 	int socket_server = crearSocketServer(port);
 	if( socket_server == -1){
@@ -40,7 +48,7 @@ int main(int argc, char**argv){
 	struct sockaddr_in cli;
 	socklen_t clilen = sizeof(cli);
 	int childpid;
-	char num[4];
+	std::string numero;
 
 	while( vivo == 0 )
 	{
@@ -51,9 +59,9 @@ int main(int argc, char**argv){
 			break;
 		}
 
-		serializarInt(id,num);
+		serializar(id,numero);
 
-		if( escribirSocketEntero(client,num,4) == -1){
+		if( escribirSocketEntero(client, (char*)numero.c_str(), numero.length()+1) == -1){
 			perror("error en envio de numero");
 			break;
 		}
@@ -61,7 +69,6 @@ int main(int argc, char**argv){
 		close(client);
 
 		id++;
-		//TODO persist id
 	}
 }
 
