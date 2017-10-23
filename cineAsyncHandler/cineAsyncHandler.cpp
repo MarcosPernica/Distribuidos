@@ -92,5 +92,5 @@ std::string getClientAddress(struct socketMapper * map, int client, int *port)
 			return std::string(add.address);
 		}
 	}
-	return NULL;
+	return "";
 }

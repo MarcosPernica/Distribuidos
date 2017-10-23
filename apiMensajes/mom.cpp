@@ -7,6 +7,8 @@
 #include "../ipc/memoriacompartida.h"
 #include "../ipc/semaforo.h"
 #include "../ipc/cola.h"
+#include "../ipc/socket.h"
+#include "../serializador.h"
 #include <stdlib.h>
 #include <sys/types.h>
 #include <sys/wait.h>
@@ -56,12 +58,29 @@ bool MOMInit(MOM &mom)
 	return true;
 }
 
-int MOMInitClient(MOM &mom, int ID)
+int pedirNuevoId(std::string server, int port){
+	int sock_fd = crearSocketCliente(server, port);
+	char buffer[BUFF_SIZE];
+	int endLine;
+	if( sock_fd != -1){
+		if( leerSocketHasta(sock_fd,buffer,BUFF_SIZE, '\0', endLine) != -1){
+			int numero;
+			std::string data = std::string(buffer);
+			desserializar(data, numero);
+			return numero;
+		}
+	}
+	return -1;
+}
+
+int MOMInitClient(MOM &mom, int ID, std::string server, int port)
 {
-	//TODO faltaria verificar que no se uso ya ese id
+	int clientId = pedirNuevoId(server, port);
+	if( clientId == -1){
+		return -1;
+	}
 	//Obtiene la cola de identificacion con el cine
 	MOMClient api;
-
 	//Crea la memoria compartida y el mutex para accederla.
 	if ((api.idMemoriaCompartida = cmpMemCrear(sizeof(struct sala), ID)) < 0)
 		return -1;
@@ -71,17 +90,19 @@ int MOMInitClient(MOM &mom, int ID)
 
 	api.memoriaCompartida = (struct sala*)cmpMemObtenerMemoria(api.idMemoriaCompartida);
 
+
 	//Lanza el proceso asincrono que va a tomar los datos de actualizacion.
 	api.pidAsincrono = fork();
 	if ( api.pidAsincrono == 0){
-		correrAsincronico(ID);
+		correrAsincronico(clientId);
 		exit(0);
 	}
 	//Registra el timer.
 	registrarSenal(SIGALRM,alarmHandler);
 
 	//Guarda el ID de comunicacion.
-	api.pid = ID;
+
+	api.pid = clientId;
 	api.estaInicializado = true;
 	api.fd = ++mom.lastFD;
 	mom.clients[api.fd] = api;

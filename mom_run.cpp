@@ -9,20 +9,22 @@
 #include "ipc/cola.h"
 #include "ipc/senal.h"
 #include "mensajes.h"
+#include "paramsParser.h"
+
 sig_atomic_t mom_vivo = 0;
 
 void terminar(int sigint){
 	mom_vivo = 1;
 }
 
-bool procesarMensaje(MOM &mom, mensaje lectura, mensaje& respuesta)
+bool procesarMensaje(MOM &mom, mensaje lectura, mensaje& respuesta, std::string host, int port)
 {
 	int fd = lectura.fd;
 	respuesta.mtype = lectura.mtype;
 	bool resultado = true;
 	switch( lectura.tipoMensaje ){
 		case INITMOM:
-			respuesta.initmom.fd = MOMInitClient(mom,lectura.initmom.pid);
+			respuesta.initmom.fd = MOMInitClient(mom,lectura.initmom.pid, host, port);
 			break;
 		case DESTROY_MOM: case SALIR_SALA:
 			resultado = MOMDeinit(mom,fd);
@@ -69,6 +71,18 @@ void MOMDestroy(MOM &mom){
 
 int main(int argc, char** argv){
 	MOM mom;
+	std::string host;
+	int port;
+	char address[17];
+	if( argc != 3){
+		printf("No se selecciono servidor de ids\n");
+		exit(1);
+	} else {
+		if ( !parseIp(argv[1], address) || parsePort(argv[2], &port) ){
+			printf("Malos parametros\n");
+			exit(1);
+		 }
+	}
 
 	if( registrarSenal(SIGINT,terminar) == -1){
 		printf("MOM: error al registrar senal");
@@ -87,7 +101,7 @@ int main(int argc, char** argv){
 			break;
 		}
 
-		procesarMensaje(mom,lectura, respuesta);
+		procesarMensaje(mom,lectura, respuesta, host, port);
 
 		if( enviarMensaje(colaEscritura,(void*)&respuesta,sizeof(mensaje)) == -1){
 			break;

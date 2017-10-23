@@ -14,7 +14,7 @@ int crearSocketCliente(std::string host, int port);
 
 int crearSocketCliente(struct sockaddr address, int len);
 
-int crearSocketServer(int port);
+int crearSocketServer(int port, int backlog);
 
 int leerSocketEntero(int fd, char * buffer, int maxLen);
 

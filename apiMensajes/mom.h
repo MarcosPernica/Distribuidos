@@ -34,7 +34,7 @@ struct MOM {
 bool MOMInit(MOM &mom);
 
 //Inicializa un cliente nuevo en el mom
-int MOMInitClient(MOM &mom ,int ID);
+int MOMInitClient(MOM &mom ,int ID, std::string server, int port);
 
 //Se logea al sistema.
 bool MOMLogin(MOM &mom, int fd, struct login &login);

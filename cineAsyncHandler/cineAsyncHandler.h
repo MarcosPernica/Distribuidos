@@ -7,7 +7,8 @@
 
 #ifndef CINEASYNCHANDLER_H_
 #define CINEASYNCHANDLER_H_
-#include "common.h"
+#include "../common.h"
+#include <string>
 
 struct addressMap
 {

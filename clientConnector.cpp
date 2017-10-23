@@ -7,8 +7,11 @@
 #include "ipc/socket.h"
 #include "ipc/cola.h"
 #include "ipc/senal.h"
+#include "serializador.h"
+#include "paramsParser.h"
 #include "mensajes.h"
 #include "common.h"
+#include <unistd.h>
 
 sig_atomic_t vivo = 0;
 void terminar(int sig){

@@ -15,6 +15,14 @@
 #include "ipc/semaforo.h"
 #include <vector>
 #include <map>
+#include <unistd.h>
+
+sig_atomic_t estaVivo = 0;
+
+void terminar(int signal)
+{
+	estaVivo = 1;
+}
 
 void cerrarTodosLosSockets(std::map<std::string, int> &sockets){
 	for (std::map<std::string, int>::iterator it=sockets.begin(); it!=sockets.end(); ++it){
@@ -40,10 +48,10 @@ int obtenerSocket(long id, struct socketMapper* memoriaCompartida,
 	int port;
 
 	tomarSem(mutex);
-	std::string address = getClientAddress(memoriaCompartida, id, &port);
+	std::string address = getClientAddress(memoriaCompartida, (int)id, &port);
 	liberarSem(mutex);
 
-	if( address != NULL && sockets[address] != NULL ){
+	if( address != "" && sockets[address] != NULL ){
 		return sockets[address];
 	} else {
 		int socket;
@@ -84,23 +92,34 @@ void procesarMensaje(mensaje msg,
 
 int main(int argc, char** argv)
 {
+	if( registrarSenal(SIGINT,terminar) < 0){
+		perror("No pudo registrar senial");
+		exit(1);
+	}
+
 	std::map<std::string, int> sockets;
 	int colaRecibir = obtenerCola(COLA_ASINC_CLIENTE);
 
 	int idMemoriaCompartida;
 	int mutex;
 
-	if ((idMemoriaCompartida = cmpMemObtener(sizeof(struct socketMapper), MEMORIA_COMPARTIDA_CINE_ID)) < 0)
+	if ((idMemoriaCompartida = cmpMemObtener(sizeof(struct socketMapper), MEMORIA_COMPARTIDA_CINE_ID)) < 0){
+		perror("No pudo obtener memoria compartida ");
 		return -1;
+	}
 
-	if ((mutex = crearSem(MUTEX_CINE_ID, 1)) == -1 )
+
+	if ((mutex = crearSem(MUTEX_CINE_ID, 1)) == -1 ){
+		perror("No pudo obtener mutex ");
 		return -1;
+	}
+
 
 	int socket;
 	struct socketMapper* memoriaCompartida;
 	memoriaCompartida = (struct socketMapper*)cmpMemObtenerMemoria(idMemoriaCompartida);
 	mensaje msg;
-	while( vivo == 0 )
+	while( estaVivo == 0 )
 	{
 
 		if( recibirMensaje(colaRecibir,&msg,sizeof(mensaje) ) == -1){

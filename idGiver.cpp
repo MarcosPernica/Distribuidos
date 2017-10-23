@@ -5,8 +5,7 @@
  *      Author: tobias
  */
 
-#include "ipc/socket.h"
-#include "ipc/senal.h"
+
 #include <string>
 #include "serializador.h"
 #include <unistd.h>
@@ -14,6 +13,8 @@
 #include <sys/types.h>
 #include <netinet/in.h>
 #include <netinet/ip.h>
+#include "ipc/socket.h"
+#include "ipc/senal.h"
 
 sig_atomic_t vivo = 0;
 void terminar(int sigint){
@@ -39,7 +40,7 @@ int main(int argc, char**argv){
 	
 	
 
-	int socket_server = crearSocketServer(port);
+	int socket_server = crearSocketServer(port,15);
 	if( socket_server == -1){
 		printf("No pudo crear socket servidor\n");
 		exit(1);

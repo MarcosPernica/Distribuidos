@@ -17,7 +17,7 @@ int crearSocketCliente(struct sockaddr address, int len){
 
 	if ( connect(socket_fd, &address, len) == -1)
 	{
-		close(sock_fd);
+		close(socket_fd);
 		return -1;
 	}
 	return socket_fd;

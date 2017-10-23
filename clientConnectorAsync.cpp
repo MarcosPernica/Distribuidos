@@ -12,6 +12,14 @@
 #include "paramsParser.h"
 #include "common.h"
 #include "serializador.h"
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <sys/socket.h>
+#include "serializador.h"
+#include <netinet/in.h>
+#include <arpa/inet.h>
+
 
 sig_atomic_t vivo = 0;
 
@@ -78,7 +86,7 @@ int main(int argc, char** argv)
 	int port = CLIENT_PORT;
 	printf("Port for client async : %d \n", port);
 
-	int socket_server = crearSocketServer(port);
+	int socket_server = crearSocketServer(port,10);
 	if( socket_server == -1){
 		printf("No pudo crear socket servidor\n");
 		exit(1);
@@ -98,7 +106,7 @@ int main(int argc, char** argv)
 
 		if( (childpid = fork()) == 0 )
 		{
-			close(server_socket);
+			close(socket_server);
 			handleAsync(client, cli);
 			close(client);
 			exit(0);
@@ -119,7 +127,7 @@ int main(int argc, char** argv)
 		waitpid(hijos[0],NULL,0);
 		hijos.pop_back();
 	}
-	close(server_socket);
+	close(socket_server);
 	return 0;
 }
 

@@ -1,12 +1,22 @@
 #include "ipc/socket.h"
 #include "ipc/cola.h"
 #include "ipc/senal.h"
+#include "ipc/semaforo.h"
+#include "ipc/memoriacompartida.h"
 #include "mensajes.h"
 #include "paramsParser.h"
 #include <vector>
 #include <string.h>
 #include "common.h"
 #include "cineAsyncHandler/cineAsyncHandler.h"
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <sys/socket.h>
+#include "serializador.h"
+#include <netinet/in.h>
+#include <arpa/inet.h>
+
 
 #define DEFAULT_PORT 9999
 
@@ -89,7 +99,7 @@ void handleClient(int socket, struct sockaddr_in cli)
 			break;
 		}
 
-		if ( recibirMensaje(colaRecibirDeCine,(void*)aRecibir,sizeof(mensaje)) == -1)
+		if ( recibirMensaje(colaRecibirDeCine,(void*)&aRecibir,sizeof(mensaje)) == -1)
 		{
 			perror("No pudo recibir mensaje de la cola ");
 			break;
@@ -128,7 +138,7 @@ int main(int argc, char** argv)
 		printf("Puerto a usar: %i\n",port);
 	}
 
-	int socket_server = crearSocketServer(port);
+	int socket_server = crearSocketServer(port,20);
 	if( socket_server == -1){
 		printf("No pudo crear socket servidor\n");
 		exit(1);
@@ -137,7 +147,7 @@ int main(int argc, char** argv)
 	struct sockaddr_in cli;
 	socklen_t clilen = sizeof(cli);
 	int childpid;
-	while( vivo == 0 )
+	while( estaVivo == 0 )
 	{
 		int client = accept(socket_server, (struct sockaddr *) &cli, &clilen );
 		if( client == -1 )
@@ -148,7 +158,7 @@ int main(int argc, char** argv)
 
 		if( (childpid = fork()) == 0 )
 		{
-			close(server_socket);
+			close(socket_server);
 			handleClient(client, cli);
 			exit(0);
 		}
@@ -168,6 +178,6 @@ int main(int argc, char** argv)
 		waitpid(hijos[0],NULL,0);
 		hijos.erase(hijos.begin());
 	}
-	close(server_socket);
+	close(socket_server);
 	return 0;
 }
