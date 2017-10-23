@@ -10,10 +10,16 @@
 
 int crearSocketCliente(std::string host, int port);
 
+int crearSocketCliente(struct sockaddr address, int len);
+
 int crearSocketServer(int port);
 
-int leerSocket(int fd, char * buffer, int maxLen);
+int leerSocketEntero(int fd, char * buffer, int maxLen);
 
-int escribirSocket(int fd, char * buffer, int len);
+int escribirSocketEntero(int fd, char * buffer, int len);
+
+int nextIndexOf(char character, char* buffer, int fromIndex, int len );
+
+int leerSocketHasta(int fd, char* buffer, int maxLen, char endLine, int &firstEndLine);
 
 #endif /* SOCKET_H_ */

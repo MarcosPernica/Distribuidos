@@ -7,13 +7,14 @@
 
 #ifndef CINEASYNCHANDLER_H_
 #define CINEASYNCHANDLER_H_
+#include "common.h"
 
 struct addressMap
 {
 	int amountClients = 0;
-	char address[32];
+	char address[MAX_LEN_ADDRESS];
 	int port = -1;
-	int clients[15];
+	int clients[MAX_AMOUNT_CLIENTS_PER_SOCKET];
 };
 
 struct socketMapper
@@ -35,7 +36,7 @@ bool addClient(struct socketMapper * map, char* address, int addressLen, int cli
 bool removeClient(struct socketMapper * map,char* address, int addressLen, int client);
 
 //Gets the address for the client, returns null if it doesnt exist
-std::string getClientSocket(struct socketMapper * map, int client);
+std::string getClientAddress(struct socketMapper * map, int client, int *port);
 
 
 

@@ -37,7 +37,6 @@ int main(int argc, char** argv)
 	}
 	printf("Conectando a ip : %s y puerto: %d\n", host,port);
 
-	//obtener colas a leer,escribir, inversas a el cliente
 	int colaRecibir = obtenerCola(COLA_RECEPCION_CINE);
 	int colaEnvio = obtenerCola(COLA_ENVIO_CINE);
 
@@ -50,23 +49,42 @@ int main(int argc, char** argv)
 
 	char buffer[BUFF_SIZE];
 	mensaje recibido;
+	mensaje aEnviar;
+	bool errored = false;
+	std::string respuesta;
 	while( vivo == 0 )
 	{
-		recibirMensaje(colaRecibir,(void*)&recibido,sizeof(mensaje));
-		//serializar
-		if( escribirSocket( socket, buffer, BUFF_SIZE ) == -1 ){
+		if( recibirMensaje(colaRecibir,(void*)&recibido,sizeof(mensaje)) == -1)
+		{
+			printf("No pudo recibir de cola\n");
+			break;
+		}
+		serializar(recibido,respuesta);
+
+		if( escribirSocketEntero( socket, (char*)respuesta.c_str(), (int)respuesta.size() ) == -1 ){
 			printf("No pudo enviar a socket\n");
-			//enviar respuesta por cola
+			aEnviar = recibido;
+			aEnviar.resultado = RESULTADOERROR;
+			enviarMensaje(colaEnvio,(void*)&aEnviar,sizeof(mensaje));
+			break;
+		}
+		respuesta.clear();
+
+		if( leerSocketEntero(socket, buffer, BUFF_SIZE) == -1 ){
+			printf("No pudo leer del socket\n");
+			aEnviar = recibido;
+			aEnviar.resultado = RESULTADOERROR;
+			enviarMensaje(colaEnvio,(void*)&aEnviar,sizeof(mensaje));
 			break;
 		}
 
-		if( leerSocket(socket, buffer, BUFF_SIZE) == -1 ){
-			printf("No pudo leer del socket\n");
-			//enviar respuesta por cola
+		desserializar(respuesta,aEnviar,false);
+		respuesta.clear();
+
+		if( enviarMensaje(colaEnvio,(void*)&aEnviar,sizeof(mensaje)) == -1){
+			printf("No pudo enviar a cola\n");
 			break;
 		}
-		//deserializar
-		//enviar a cola
 
 	}
 	close(socket);

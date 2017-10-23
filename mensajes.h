@@ -75,6 +75,7 @@ struct mensaje{
 		struct reserva asientoS; //Corresponde a INTERACCION_ASIENTOS.
 		struct finalizarCompra fCompra; //Corresponde a FINALIZAR_COMPRA.
 		struct mominit initmom;
+		char address[];
 		int idUsuario;
 	};
 };

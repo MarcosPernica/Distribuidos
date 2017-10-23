@@ -4,6 +4,9 @@
 #include "mensajes.h"
 #include "paramsParser.h"
 #include <vector>
+#include <string.h>
+#include "common.h"
+#include "cineAsyncHandler/cineAsyncHandler.h"
 
 #define DEFAULT_PORT 9999
 
@@ -14,29 +17,100 @@ void terminar(int signal)
 	estaVivo = 1;
 }
 
-void handleClient(int socket, struct sockaddr_in cli){
-	int colaEnvioACine = obtenerCola(1);
-	int colaRecibirDeCine = obtenerCola(2);
-	//TODO buff size
-	int BUFF_SIZE = 1024;
-	char buffer[1024];
+void procesarClientesSockets(mensaje &msg, struct socketMapper* memoria,int mutex,char* address)
+{
+	tomarSem(mutex);
+	switch(msg.tipoMensaje)
+	{
+	case LOGIN:
+		addClient(memoria,address, strlen(address), msg.mtype);
+		break;
+	case SALIR_SALA:
+		removeClient(memoria,address, strlen(address), msg.mtype);
+		break;
+	}
+	liberarSem(mutex);
+}
 
+void handleClient(int socket, struct sockaddr_in cli)
+{
+	int colaLogin = obtenerCola(COLA_LOGIN_CINE);
+	int colaEnvioACine = obtenerCola(COLA_RECEPCION_CINE);
+	int colaRecibirDeCine = obtenerCola(COLA_ENVIO_CINE);
+
+	char* address = inet_ntoa(cli.sin_addr);
+	printf("IP address: %s\n", address);
+	int idMemoriaCompartida;
+	int mutex;
+
+	if ((idMemoriaCompartida = cmpMemObtener(sizeof(struct socketMapper), MEMORIA_COMPARTIDA_CINE_ID)) < 0){
+		perror("No pudo obtener la memoria compartida");
+		exit(1);
+	}
+
+
+	if ((mutex = crearSem(MUTEX_CINE_ID, 1)) == -1 ){
+		perror("No pudo obtener el mutex de la memoria compartida");
+		exit(1);
+	}
+
+	struct socketMapper* memoriaCompartida;
+	memoriaCompartida = (struct socketMapper*)cmpMemObtenerMemoria(idMemoriaCompartida);
+
+	tomarSem(mutex);
+	addAddress(memoriaCompartida,address,strlen(address),CLIENT_PORT);
+	liberarSem(mutex);
+
+	cli.sin_addr;
+	char buffer[BUFF_SIZE];
+	std::string recibido;
+	mensaje aEnviar;
+	mensaje aRecibir;
+	int lastEnd = -1;
+	int totalRead = -1;
+	int unusedBufferLength = 0;
 	while( estaVivo == 0 )
 	{
-		if( leerSocket(socket,buffer,BUFF_SIZE) == -1 ){
+		if( (totalRead = leerSocketHasta(socket,buffer,BUFF_SIZE,'\0',lastEnd)) == -1 )
+		{
 			perror("No pudo leer ");
 			break;
 		}
-		//deserializar
-		//enviarMensaje();
-		//recibirCola();
-		//serializar
-		if( escribirSocket(socket, buffer, BUFF_SIZE) == -1){
+		//copio stream al string recibido
+		recibido = std::string(buffer,lastEnd);
+		desserializar( recibido, aEnviar );
+		recibido.clear();
+
+		procesarClientesSockets(aEnviar,memoriaCompartida,mutex,address);
+		if( enviarMensaje( aEnviar.tipoMensaje == LOGIN ? colaLogin : colaEnvioACine,
+				(void*)&aEnviar, sizeof(mensaje) ) == -1)
+		{
+			perror("No pudo enviar mensaje a la cola ");
+			break;
+		}
+
+		if ( recibirMensaje(colaRecibirDeCine,(void*)aRecibir,sizeof(mensaje)) == -1)
+		{
+			perror("No pudo recibir mensaje de la cola ");
+			break;
+
+		}
+
+		serializar(aRecibir, recibido, false);
+
+		if( escribirSocketEntero(socket, (char*)recibido.c_str(), recibido.size()) == -1){
 			perror("No pudo escribir en socket ");
 			break;
 		}
+		recibido.clear();
 	}
+	tomarSem(mutex);
+	removeAddress(memoriaCompartida,address,strlen(address));
+	liberarSem(mutex);
+
 	close(socket);
+
+	//ENVIAR MENSAJE CERRAR SOCKET
 }
 
 int main(int argc, char** argv)

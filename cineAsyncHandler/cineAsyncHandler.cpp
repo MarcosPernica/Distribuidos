@@ -81,13 +81,14 @@ bool removeClient(struct socketMapper * map,char* address, int addressLen, int c
 	return false;
 }
 
-std::string getClientSocket(struct socketMapper * map, int client)
+std::string getClientAddress(struct socketMapper * map, int client, int *port)
 {
 	int cliIndex;
 	for( int i = 0; i < map->amountAddress; i++){
 		struct addressMap add = map->addresses[i];
 		if( (cliIndex = clientIn(&add,client)) != -1 )
 		{
+			*port = add.port;
 			return std::string(add.address);
 		}
 	}

@@ -10,6 +10,8 @@
 #include "mensajes.h"
 #include <vector>
 #include "paramsParser.h"
+#include "common.h"
+#include "serializador.h"
 
 sig_atomic_t vivo = 0;
 
@@ -20,12 +22,48 @@ void terminar(int signal)
 
 
 void handleAsync(int socketfd, sockaddr_in cli){
-	char buffer[1024];
-	int cola = obtenerCola(1); //tiene que ser la asincronica
-	while( leerSocket(socketfd,buffer,1024) != -1 && vivo == 0){
-		mensaje mensaje;
-		//deserialiar mensaje
+	char buffer[BUFF_SIZE];
+	int cola = obtenerCola(COLA_ASINC_CLIENTE);
+
+	mensaje mensaje;
+	std::string recibido;
+
+	int endLine = -1;
+	int totalRead = -1;
+	int unusedBufferLength;
+
+	while( vivo == 0){
+
+		//si hay mas mensajes en lo leido
+		if( totalRead > endLine + 1 )
+		{
+			//copio elementos al principio
+			unusedBufferLength = totalRead - endLine + 1;
+			for( int i = 0; i < unusedBufferLength; i ++)
+			{
+				buffer[i] = buffer[endLine + 1 + i];
+			}
+		} else
+		{
+			unusedBufferLength = 0;
+		}
+
+		//si no hay otro mensaje en el buffer lee del socket lo restante
+		if ( (endLine = nextIndexOf('\0', buffer, 0, unusedBufferLength)) == -1 )
+		{
+			if( (totalRead = leerSocketHasta(socketfd,
+					buffer + unusedBufferLength,
+					BUFF_SIZE - unusedBufferLength,'\0',endLine)) == -1)
+			{
+				perror("Error leyendo socket: ");
+				break;
+			}
+		}
+
+		recibido = std::string(buffer, endLine);
+		desserializar(recibido, mensaje);
 		enviarMensaje(cola,(void*)&mensaje,sizeof(mensaje));
+		recibido.clear();
 	}
 }
 
@@ -37,12 +75,8 @@ int main(int argc, char** argv)
 	}
 
 	std::vector<int> hijos;
-	int port = 8000;
-	if( argc == 2  &&  parsePort(argv[1],&port) ){
-		printf("Port selected: %d \n", port);
-	} else if( ){
-		printf("No port specified taking default port %d\n",port);
-	}
+	int port = CLIENT_PORT;
+	printf("Port for client async : %d \n", port);
 
 	int socket_server = crearSocketServer(port);
 	if( socket_server == -1){

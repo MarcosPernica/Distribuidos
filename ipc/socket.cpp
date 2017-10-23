@@ -8,6 +8,21 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 
+int crearSocketCliente(struct sockaddr address, int len){
+	int socket_fd;
+	if ((socket_fd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
+		perror("socket");
+		return -1;
+	}
+
+	if ( connect(socket_fd, &address, len) == -1)
+	{
+		close(sock_fd);
+		return -1;
+	}
+	return socket_fd;
+}
+
 int crearSocketCliente(std::string host, int port){
 	struct sockaddr_in serv;
 	struct addrinfo hints, *servinfo, *p;
@@ -73,20 +88,51 @@ int crearSocketServer(int port, int backlog){
 	return listen_fd;
 }
 
-int leerSocket(int fd, char * buffer, int maxLen){
+int leerSocketEntero(int fd, char * buffer, int maxLen){
 	int totalLen = 0;
 	int len = 0;
 	do {
 		len = read(fd,buffer + totalLen,maxLen - totalLen );
-		totalLen+= len;
+		totalLen += len;
 	}while (len != -1 && totalLen < maxLen );
+
 	if( len < 0 ){
 		return len;
 	}
 	return totalLen;
 }
 
-int escribirSocket(int fd, char* buffer, int length){
+int nextIndexOf(char character, char* buffer, int fromIndex, int len ){
+	for( int i = 0; i < len; i++ )
+	{
+		int index = fromIndex + i;
+		if( buffer[index] == character ){
+			return index;
+		}
+	}
+	return -1;
+}
+
+int leerSocketHasta(int fd, char* buffer, int maxLen, char endLine, int &firstEndLine){
+	int totalLen = 0;
+	int len = 0;
+
+	do {
+		len = read(fd,buffer + totalLen,maxLen - totalLen );
+		totalLen += len;
+		firstEndLine = nextIndexOf(endLine,buffer, totalLen - len , len);
+		if( firstEndLine != -1 ){
+			break;
+		}
+	}while ( len != -1 && totalLen < maxLen );
+
+	if( len < 0 ){
+		return len;
+	}
+	return totalLen;
+}
+
+int escribirSocketEntero(int fd, char* buffer, int length){
 	int totalLen = 0;
 	int len = 0;
 	do {

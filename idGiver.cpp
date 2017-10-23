@@ -53,7 +53,7 @@ int main(int argc, char**argv){
 
 		serializarInt(id,num);
 
-		if( escribirSocket(client,num,4) == -1){
+		if( escribirSocketEntero(client,num,4) == -1){
 			perror("error en envio de numero");
 			break;
 		}
