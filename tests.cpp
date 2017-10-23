@@ -282,8 +282,6 @@ int main()
 
 	cout << "Resultado del test de igualdad de interaccion asiento: " << std::boolalpha << test << endl;
 
-	
-
 
 	m.tipoMensaje = FINALIZAR_COMPRA;
 	
@@ -304,6 +302,17 @@ int main()
 	
 
 	cout << "Resultado del test de igualdad de finalizar compra: " << std::boolalpha << test << endl;
+
+	serial = "";
+	int numero, numeroDesserializado;
+
+	serializar(numero, serial);
+	desserializar(serial, numeroDesserializado);
+
+	test = numero == numeroDesserializado;
+	
+
+	cout << "Resultado del test de igualdad de entero: " << std::boolalpha << test << endl;
  
 	return 0;
 } 

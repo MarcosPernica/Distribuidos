@@ -16,6 +16,6 @@ int crearSocketServer(int port);
 
 int leerSocket(int fd, char * buffer, int maxLen);
 
-int escribirSocket(int fd, const char * buffer, int len);
+int escribirSocket(int fd, char * buffer, int len);
 
 #endif /* SOCKET_H_ */

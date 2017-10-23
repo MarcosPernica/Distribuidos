@@ -86,7 +86,7 @@ int leerSocket(int fd, char * buffer, int maxLen){
 	return totalLen;
 }
 
-int escribirSocket(int fd, const char* buffer, int length){
+int escribirSocket(int fd, char* buffer, int length){
 	int totalLen = 0;
 	int len = 0;
 	do {
