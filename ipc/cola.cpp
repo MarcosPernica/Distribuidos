@@ -3,6 +3,7 @@
 #include <sys/types.h>
 #include <sys/ipc.h>
 #include <sys/msg.h>
+#include <stdio.h>
 
 int crearCola(int id){
 	key_t clave;
@@ -34,6 +35,7 @@ int recibirMensaje(int colaId, long type ,void* buffer, int length){
 }
 
 int recibirMensajeAsinc(int colaId, long type ,void* buffer, int length){
-	return msgrcv(colaId,buffer,length-sizeof(long),type,IPC_NOWAIT);
+	int read = msgrcv(colaId,buffer,length-sizeof(long),type,IPC_NOWAIT);
+	return read;
 }
 

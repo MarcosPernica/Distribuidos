@@ -26,7 +26,7 @@ static std::string validarBarraCero(const char* campo)
 	else
 		campoValido[LONGITUDMAXNOMBRE-1] = '\0';
 
-	return std::string(campoValido);
+	return std::string(campoValido, longitud);
 }
 
 static std::string serializarEstadoAsiento(const struct reserva &res)

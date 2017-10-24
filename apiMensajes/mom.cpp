@@ -58,11 +58,14 @@ bool MOMInit(MOM &mom)
 	return true;
 }
 
-int pedirNuevoId(std::string server, int port){
+int pedirNuevoId(std::string &server, int port){
+	printf("Crear nuevo id %s hj\n",server.c_str());
 	int sock_fd = crearSocketCliente(server, port);
 	char buffer[BUFF_SIZE];
 	int endLine;
-	if( sock_fd != -1){
+	if( sock_fd != -1)
+	{
+		printf("Leyendo numero de server \n");
 		if( leerSocketHasta(sock_fd,buffer,BUFF_SIZE, '\0', endLine) != -1){
 			int numero;
 			std::string data = std::string(buffer);
@@ -70,10 +73,11 @@ int pedirNuevoId(std::string server, int port){
 			return numero;
 		}
 	}
+	printf("No pudo conectar\n");
 	return -1;
 }
 
-int MOMInitClient(MOM &mom, int ID, std::string server, int port)
+int MOMInitClient(MOM &mom, int ID, std::string &server, int port)
 {
 	int clientId = pedirNuevoId(server, port);
 	if( clientId == -1){
@@ -121,6 +125,7 @@ bool MOMLogin(MOM &mom,int fd, struct login &login)
 	login.id = client.pid;
 	envio.mtype = LOGIN;
 	envio.l = login;
+	envio.tipoMensaje = LOGIN;
 
 	mensaje respuesta;
 	if ( consultarCine(mom.colaLogin, mom.colaRecepcion, envio, login.id, respuesta) == -1 ){

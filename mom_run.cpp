@@ -17,7 +17,7 @@ void terminar(int sigint){
 	mom_vivo = 1;
 }
 
-bool procesarMensaje(MOM &mom, mensaje lectura, mensaje& respuesta, std::string host, int port)
+bool procesarMensaje(MOM &mom, mensaje lectura, mensaje& respuesta, std::string &host, int port)
 {
 	int fd = lectura.fd;
 	respuesta.mtype = lectura.mtype;
@@ -78,11 +78,13 @@ int main(int argc, char** argv){
 		printf("No se selecciono servidor de ids\n");
 		exit(1);
 	} else {
-		if ( !parseIp(argv[1], address) || parsePort(argv[2], &port) ){
+		if ( !parseIp(argv[1], address) || !parsePort(argv[2], &port) ){
 			printf("Malos parametros\n");
 			exit(1);
 		 }
 	}
+
+	host = std::string(argv[1]);
 
 	if( registrarSenal(SIGINT,terminar) == -1){
 		printf("MOM: error al registrar senal");

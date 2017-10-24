@@ -18,7 +18,6 @@ void correrAsincronico(int pid){
 	int registro = registrarSenal(SIGINT,terminarAsinc);
 	mensaje mensaje;
 
-
 	//Obtiene la memoria compartida y el mutex de la memoria.
 	int idMemoria = cmpMemObtener(sizeof(struct sala), pid);
 	int semaforo = obtenerSem(pid);

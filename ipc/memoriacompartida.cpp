@@ -29,7 +29,7 @@ int cmpMemObtener(size_t tamano, int idMemoria)
 	if(clave == -1)
 		return MEMERRORTOK;
 
-	int id = shmget(clave, 0, IPC_CREAT | 0666);
+	int id = shmget(clave, tamano, IPC_CREAT | 0666);
 
 	if(id == -1)
 		return MEMERRORCREACION;

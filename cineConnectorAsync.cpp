@@ -77,7 +77,7 @@ void procesarMensaje(mensaje msg,
 		{
 			std::string aEnviar;
 			serializar(msg,aEnviar);
-			if( escribirSocketEntero( socket, (char*)aEnviar.c_str(), aEnviar.size() ) == -1 ){
+			if( escribirSocketEntero( socket, (char*)aEnviar.c_str(), aEnviar.size() + 1 ) == -1 ){
 				printf("No pudo enviar a socket\n");
 				break;
 			}
@@ -103,13 +103,14 @@ int main(int argc, char** argv)
 	int idMemoriaCompartida;
 	int mutex;
 
-	if ((idMemoriaCompartida = cmpMemObtener(sizeof(struct socketMapper), MEMORIA_COMPARTIDA_CINE_ID)) < 0){
+	if ((idMemoriaCompartida = cmpMemObtener(sizeof(struct socketMapper), MEMORIA_COMPARTIDA_CINE_ID)) < 0)
+	{
 		perror("No pudo obtener memoria compartida ");
 		return -1;
 	}
 
 
-	if ((mutex = crearSem(MUTEX_CINE_ID, 1)) == -1 ){
+	if ((mutex = obtenerSem(MUTEX_CINE_ID)) == -1 ){
 		perror("No pudo obtener mutex ");
 		return -1;
 	}

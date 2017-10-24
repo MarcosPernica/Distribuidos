@@ -61,7 +61,7 @@ int main(int argc, char**argv){
 		}
 
 		serializar(id,numero);
-
+		printf("Escribiendo id %i\n",id);
 		if( escribirSocketEntero(client, (char*)numero.c_str(), numero.length()+1) == -1){
 			perror("error en envio de numero");
 			break;

@@ -12,14 +12,31 @@
 #include "mensajes.h"
 #include "common.h"
 #include <unistd.h>
+#include <errno.h>
+#include <time.h>
+#include "timeout.h"
 
 sig_atomic_t vivo = 0;
+
+void handleAlarm(int sig){
+
+}
+
 void terminar(int sig){
 	vivo = 1;
 }
 
 int main(int argc, char** argv)
 {
+	if( registrarSenal(SIGINT,terminar) < 0){
+		perror("No pudo registrar senial ctrl c");
+		exit(1);
+	}
+
+	if( registrarSenal(SIGALRM,handleAlarm) < 0){
+		perror("No pudo registrar senial de alarma");
+		exit(1);
+	}
 	char host[16] = "127.0.0.1";
 	int port = DEFAULT_CINE_PORT;
 
@@ -42,6 +59,7 @@ int main(int argc, char** argv)
 
 	int colaRecibir = obtenerCola(COLA_RECEPCION_CINE);
 	int colaEnvio = obtenerCola(COLA_ENVIO_CINE);
+	int colaLogin = obtenerCola(COLA_LOGIN_CINE);
 
 	int socket = crearSocketCliente(host, port);
 	if( socket == -1 )
@@ -55,16 +73,40 @@ int main(int argc, char** argv)
 	mensaje aEnviar;
 	bool errored = false;
 	std::string respuesta;
+	int colaArecibir = colaLogin;
+	int totalRead = -1;
+	int endLine = -1;
+	struct timespec nanoTime;
+	nanoTime.tv_sec = 0;
+	nanoTime.tv_nsec = 1000;
 	while( vivo == 0 )
 	{
-		if( recibirMensaje(colaRecibir,(void*)&recibido,sizeof(mensaje)) == -1)
+		printf("Esperando mesaje de cola\n");
+		while( recibirMensajeAsinc(colaArecibir,0,(void*)&recibido,sizeof(mensaje)) == -1)
 		{
+			if( errno == ENOMSG ){
+				colaArecibir = colaArecibir == colaLogin ? colaRecibir : colaLogin;
+				if ( nanosleep(&nanoTime,NULL) == -1){
+					errored = true;
+					break;
+				}
+				continue;
+			}
+			errored = true;
 			printf("No pudo recibir de cola\n");
 			break;
 		}
+
+		if( errored ){
+			break;
+		}
+
+		printf("Leyo mensaje %i \n", recibido.tipoMensaje);
 		serializar(recibido,respuesta);
 
-		if( escribirSocketEntero( socket, (char*)respuesta.c_str(), (int)respuesta.size() ) == -1 ){
+		printf("Escribiendo a socket %i\n",respuesta.size() + 1);
+		printf("Escribiendo a socket %s\n",respuesta);
+		if( escribirSocketEntero( socket, (char*)respuesta.c_str(), respuesta.size() + 1 ) == -1 ){
 			printf("No pudo enviar a socket\n");
 			aEnviar = recibido;
 			aEnviar.resultado = RESULTADOERROR;
@@ -73,17 +115,30 @@ int main(int argc, char** argv)
 		}
 		respuesta.clear();
 
-		if( leerSocketEntero(socket, buffer, BUFF_SIZE) == -1 ){
-			printf("No pudo leer del socket\n");
+		printf("Esperando respuesta del socket\n");
+		ponerAlarma(TIME_OUT_CONNECTION);
+		if( ( totalRead = leerSocketHasta(socket,buffer,BUFF_SIZE,'\0',endLine)) == -1 ){
+			bool alarm = errno == EINTR && vivo == 0;
+			perror("No pudo leer del socket: ");
 			aEnviar = recibido;
 			aEnviar.resultado = RESULTADOERROR;
 			enviarMensaje(colaEnvio,(void*)&aEnviar,sizeof(mensaje));
-			break;
+			perror("Envio mensaje\n ");
+			if( alarm ) continue;
+			else break;
+		}
+		cancelarAlarma();
+
+		if( endLine != -1){
+			respuesta = std::string(buffer,endLine);
+			desserializar(respuesta,aEnviar,false);
+			respuesta.clear();
+		} else {
+			aEnviar = recibido;
+			aEnviar.resultado = RESULTADOERROR;
 		}
 
-		desserializar(respuesta,aEnviar,false);
-		respuesta.clear();
-
+		printf("Enviando mensaje de respuesta a la cola\n");
 		if( enviarMensaje(colaEnvio,(void*)&aEnviar,sizeof(mensaje)) == -1){
 			printf("No pudo enviar a cola\n");
 			break;

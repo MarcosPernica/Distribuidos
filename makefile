@@ -19,15 +19,15 @@ all: init destroy client cine mom idGiver clientSocket cineSocket cineSocketAsyn
 	if [ ! -d ./build/ ]; then mkdir ./build/; fi
 	mv *.o ./build/
 #--------
-init: inicializador.o cola.o
-	$(CC) $(DEBUG) -o init inicializador.o cola.o
+init: inicializador.o cola.o semaforo.o memoriacompartida.o cineAsyncHandler.o
+	$(CC) $(DEBUG) -o init inicializador.o cola.o semaforo.o memoriacompartida.o cineAsyncHandler.o
 destroy: destructor.o cola.o
 	$(CC) $(DEBUG) -o destroy destructor.o cola.o
 
 destructor.o: destructor/destructor.cpp ipc/cola.h common.h
 	$(CC) $(DEBUG) -c destructor/destructor.cpp
 	
-inicializador.o: inicializador/inicializador.cpp ipc/cola.h common.h
+inicializador.o: inicializador/inicializador.cpp ipc/cola.h ipc/semaforo.h ipc/memoriacompartida.h common.h 
 	$(CC) $(DEBUG) -c inicializador/inicializador.cpp
 	
 #------

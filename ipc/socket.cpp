@@ -34,7 +34,7 @@ int crearSocketCliente(std::string host, int port){
 	hints.ai_socktype = SOCK_STREAM;
 
 	char portStr[12];
-	sprintf(portStr, "%d", port);
+	sprintf(portStr, "%i",(unsigned int) port);
 
 	if ((rv = getaddrinfo(host.c_str(), portStr, &hints, &servinfo)) != 0) {
 		fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
@@ -63,7 +63,7 @@ int crearSocketServer(int port, int backlog){
 
 	struct sockaddr_in serv;
 
-	if ( (listen_fd=socket(PF_INET,SOCK_STREAM,0) ) < 0 ){
+	if ( (listen_fd=socket(AF_INET,SOCK_STREAM,0) ) < 0 ){
 		perror("socket error! ");
 		return -1;
 	}
@@ -84,7 +84,7 @@ int crearSocketServer(int port, int backlog){
 		close(listen_fd);
 		return -1;
 	}
-
+	printf("Running server in : %s\n", (char*)inet_ntoa(serv.sin_addr));
 	return listen_fd;
 }
 
@@ -94,10 +94,10 @@ int leerSocketEntero(int fd, char * buffer, int maxLen){
 	do {
 		len = read(fd,buffer + totalLen,maxLen - totalLen );
 		totalLen += len;
-	}while (len != -1 && totalLen < maxLen );
+	}while (len > 0 && totalLen < maxLen );
 
-	if( len < 0 ){
-		return len;
+	if( len <= 0 ){
+		return -1;
 	}
 	return totalLen;
 }
@@ -106,8 +106,13 @@ int nextIndexOf(char character, char* buffer, int fromIndex, int len ){
 	for( int i = 0; i < len; i++ )
 	{
 		int index = fromIndex + i;
+		printf("Read %i . expecting : %i \n",(int)buffer[index] ,(int)character);
 		if( buffer[index] == character ){
-			return index;
+			if ( i + 1 < len &&  buffer[index + 1] == '|' ){
+					continue;
+			} else {
+				return index;
+			}
 		}
 	}
 	return -1;
@@ -118,16 +123,17 @@ int leerSocketHasta(int fd, char* buffer, int maxLen, char endLine, int &firstEn
 	int len = 0;
 
 	do {
-		len = read(fd,buffer + totalLen,maxLen - totalLen );
+		len = read(fd, buffer + totalLen, maxLen - totalLen );
 		totalLen += len;
 		firstEndLine = nextIndexOf(endLine,buffer, totalLen - len , len);
 		if( firstEndLine != -1 ){
 			break;
 		}
-	}while ( len != -1 && totalLen < maxLen );
+		printf("Len read %i\n",len);
+	}while ( len > 0 && totalLen < maxLen );
 
-	if( len < 0 ){
-		return len;
+	if( len <= 0 ){
+		return -1;
 	}
 	return totalLen;
 }

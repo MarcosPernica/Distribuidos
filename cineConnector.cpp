@@ -5,6 +5,7 @@
 #include "ipc/memoriacompartida.h"
 #include "mensajes.h"
 #include "paramsParser.h"
+#include "timeout.h"
 #include <vector>
 #include <string.h>
 #include "common.h"
@@ -55,12 +56,14 @@ void handleClient(int socket, struct sockaddr_in cli)
 
 	if ((idMemoriaCompartida = cmpMemObtener(sizeof(struct socketMapper), MEMORIA_COMPARTIDA_CINE_ID)) < 0){
 		perror("No pudo obtener la memoria compartida");
+		close(socket);
 		exit(1);
 	}
 
 
-	if ((mutex = crearSem(MUTEX_CINE_ID, 1)) == -1 ){
+	if ( ( mutex = obtenerSem(MUTEX_CINE_ID) ) == -1 ){
 		perror("No pudo obtener el mutex de la memoria compartida");
+		close(socket);
 		exit(1);
 	}
 
@@ -81,17 +84,22 @@ void handleClient(int socket, struct sockaddr_in cli)
 	int unusedBufferLength = 0;
 	while( estaVivo == 0 )
 	{
+		printf("%i. Esperando lectura de socket\n", getpid());
 		if( (totalRead = leerSocketHasta(socket,buffer,BUFF_SIZE,'\0',lastEnd)) == -1 )
 		{
 			perror("No pudo leer ");
 			break;
 		}
+
 		//copio stream al string recibido
 		recibido = std::string(buffer,lastEnd);
 		desserializar( recibido, aEnviar );
+		printf("%i. Deserializo %s\n", getpid(), recibido.c_str());
 		recibido.clear();
 
 		procesarClientesSockets(aEnviar,memoriaCompartida,mutex,address);
+
+		printf("%i. Envio mensaje a cola\n", getpid());
 		if( enviarMensaje( aEnviar.tipoMensaje == LOGIN ? colaLogin : colaEnvioACine,
 				(void*)&aEnviar, sizeof(mensaje) ) == -1)
 		{
@@ -99,7 +107,8 @@ void handleClient(int socket, struct sockaddr_in cli)
 			break;
 		}
 
-		if ( recibirMensaje(colaRecibirDeCine,(void*)&aRecibir,sizeof(mensaje)) == -1)
+		printf("%i. Recibir respuesta de cola\n", getpid());
+		if ( recibirMensaje(colaRecibirDeCine,aEnviar.mtype,(void*)&aRecibir,sizeof(mensaje)) == -1)
 		{
 			perror("No pudo recibir mensaje de la cola ");
 			break;
@@ -108,7 +117,8 @@ void handleClient(int socket, struct sockaddr_in cli)
 
 		serializar(aRecibir, recibido, false);
 
-		if( escribirSocketEntero(socket, (char*)recibido.c_str(), recibido.size()) == -1){
+		printf("%i. Escribir respuesta en socket %s \n", getpid(), recibido.c_str());
+		if( escribirSocketEntero(socket, (char*)recibido.c_str(), recibido.size() + 1) == -1){
 			perror("No pudo escribir en socket ");
 			break;
 		}
@@ -120,7 +130,11 @@ void handleClient(int socket, struct sockaddr_in cli)
 
 	close(socket);
 
-	//ENVIAR MENSAJE CERRAR SOCKET
+	int colaAsync = obtenerCola(COLA_ASINC_CLIENTE);
+	mensaje cerrarSocket;
+	cerrarSocket.tipoMensaje = SOCKETS_ASYNC_UPDATE;
+	memcpy(cerrarSocket.address,address,strlen(address));
+	enviarMensaje(colaAsync,(void*)&cerrarSocket,sizeof(mensaje));
 }
 
 int main(int argc, char** argv)
@@ -178,6 +192,7 @@ int main(int argc, char** argv)
 		waitpid(hijos[0],NULL,0);
 		hijos.erase(hijos.begin());
 	}
+
 	close(socket_server);
 	return 0;
 }
