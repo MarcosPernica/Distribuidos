@@ -26,7 +26,7 @@ static std::string validarBarraCero(const char* campo)
 	else
 		campoValido[LONGITUDMAXNOMBRE-1] = '\0';
 
-	return std::string(campoValido, longitud);
+	return std::string("");
 }
 
 static std::string serializarEstadoAsiento(const struct reserva &res)
@@ -36,7 +36,7 @@ static std::string serializarEstadoAsiento(const struct reserva &res)
 	//Aseguro que este el '\0' en el nombre del cliente.
 	std::string nombreCliente = validarBarraCero(res.nombreCliente);
 	
-	serial << res.idSala << SEPARADOR << res.idUsuario << SEPARADOR << nombreCliente << SEPARADOR << res.estado << SEPARADOR << res.asiento.x << SEPARADOR << res.asiento.y;
+	serial << res.idSala << SEPARADOR << res.idUsuario << SEPARADOR << nombreCliente << SEPARADOR << (int)res.estado << SEPARADOR << res.asiento.x << SEPARADOR << res.asiento.y;
 	
 	std::string aux;
 	getline(serial, aux);
@@ -66,7 +66,7 @@ bool serializar(const mensaje &msg, std::string &serializado, bool peticion){
 	std::stringstream serial;
 
 	//Serializa la primera parte del mensaje, comun a todos los mensajes.
-	serial << msg.mtype << SEPARADOR << msg.tipoMensaje << SEPARADOR << msg.resultado << SEPARADOR << msg.fd << SEPARADOR;
+	serial << msg.mtype << SEPARADOR << msg.tipoMensaje << SEPARADOR << (int)msg.resultado << SEPARADOR << msg.fd << SEPARADOR;
 
 	//Serializa dependiendo del tipo de mensaje.
 	std::string nombreCliente, password;
@@ -167,7 +167,7 @@ static bool desserializarInformacionSala(struct sala &informacionSala, std::vect
 			informacionSala.estadoAsientos[i][a].idSala = aLong(partes[indiceInicial++]);
 			informacionSala.estadoAsientos[i][a].idUsuario = aLong(partes[indiceInicial++]);
 			strncpy(informacionSala.estadoAsientos[i][a].nombreCliente, partes[indiceInicial++].c_str(), LONGITUDMAXNOMBRE);
-			informacionSala.estadoAsientos[i][a].estado = partes[indiceInicial++].at(0);
+			informacionSala.estadoAsientos[i][a].estado = (char)aLong(partes[indiceInicial++]);
 			informacionSala.estadoAsientos[i][a].asiento.x = aLong(partes[indiceInicial++]);
 			informacionSala.estadoAsientos[i][a].asiento.y = aLong(partes[indiceInicial++]);  
 		} 
@@ -185,7 +185,7 @@ bool desserializar(std::string &serializado, mensaje &desserializado, bool petic
 	
 	desserializado.mtype = aLong(valores[0]);
 	desserializado.tipoMensaje = aLong(valores[1]);
-	desserializado.resultado = valores[2].at(0);
+	desserializado.resultado = (char)aLong(valores[2]);
 	desserializado.fd = aLong(valores[3]);
 
 	//Proceso inverso al serializado.
