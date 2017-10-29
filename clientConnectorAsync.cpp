@@ -71,6 +71,7 @@ void handleAsync(int socketfd, sockaddr_in cli){
 			}
 		}
 
+		printf("Recibio actualizacion al socket \n");
 		recibido = std::string(buffer, endLine);
 		desserializar(recibido, mensaje);
 		enviarMensaje(cola,(void*)&mensaje,sizeof(mensaje));
@@ -107,6 +108,7 @@ int main(int argc, char** argv)
 			break;
 		}
 
+		printf("Se conecto un cine alsincronico\n");
 		if( (childpid = fork()) == 0 )
 		{
 			close(socket_server);

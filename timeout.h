@@ -8,8 +8,8 @@
 #ifndef TIMEOUT_H_
 #define TIMEOUT_H_
 
-#define TIME_OUT_USER 30
-#define TIME_OUT_CONNECTION 10
+#define TIME_OUT_USER 120
+#define TIME_OUT_CONNECTION 350
 
 #include <time.h>
 #include <errno.h>

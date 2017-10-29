@@ -104,8 +104,6 @@ int main(int argc, char** argv)
 		printf("Leyo mensaje %i \n", recibido.tipoMensaje);
 		serializar(recibido,respuesta);
 
-		printf("Escribiendo a socket %i\n",(int)respuesta.size() + 1);
-		printf("Escribiendo a socket %s\n",respuesta.c_str());
 		if( escribirSocketEntero( socket, (char*)respuesta.c_str(), respuesta.size() + 1 ) == -1 ){
 			printf("No pudo enviar a socket\n");
 			aEnviar = recibido;
