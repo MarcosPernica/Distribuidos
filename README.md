@@ -3,10 +3,14 @@
   - `make all` para compilar los ejectuables
   - `./init` para inicializar las colas
   - `./cine` para correr el cine
-  - `./mom` para correr el mom
+  - `./mom <ip> <puerto>` para correr el mom
   - `./client` para correl el client
+  - `./cineSocket <puerto>` para correr el server del cine
+  - `./cineSocketAsync` para correr el administrador de actualizaciones
+  - `./clientSocket <ip> <puerto>` para correr la conexion cliente al cine
+  - `./clientSocketAsync` para correr el servidor de actualizaciones
   - Se pueden frenar tanto el MOM como el cine con `Ctrl-C`
-  - Si ocurrio un problema indeseado correr `./destroy` para eliminar las colas  
+  - Si ocurrio un problema indeseado correr `./destroy` o `ipcrm -a` para eliminar las colas 
   
 ## TP1
 
