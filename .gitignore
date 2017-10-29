@@ -12,4 +12,5 @@ cineSocket
 cineSocketAsync
 clientSocket
 clientSocketAsync
+idGiver
 *.zip
