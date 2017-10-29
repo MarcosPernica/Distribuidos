@@ -56,8 +56,11 @@ void handleAsync(int socketfd, sockaddr_in cli){
 			unusedBufferLength = 0;
 		}
 
-		//si no hay otro mensaje en el buffer lee del socket lo restante
-		if ( (endLine = nextIndexOf('\0', buffer, 0, unusedBufferLength)) == -1 )
+
+		endLine = nextIndexOf('\0', buffer, 0, unusedBufferLength);
+		// si no hay otro mensaje en el buffer o hay un 0 en la basura(falso mensaje)
+		// lee del socket lo restante
+		if ( endLine == -1 || endLine + 1 > unusedBufferLength )
 		{
 			if( (totalRead = leerSocketHasta(socketfd,
 					buffer + unusedBufferLength,

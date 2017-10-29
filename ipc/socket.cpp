@@ -106,7 +106,6 @@ int nextIndexOf(char character, char* buffer, int fromIndex, int len ){
 	for( int i = 0; i < len; i++ )
 	{
 		int index = fromIndex + i;
-		printf("Read %i . expecting : %i \n",(int)buffer[index] ,(int)character);
 		if( buffer[index] == character ){
 			if ( i + 1 < len &&  buffer[index + 1] == '|' ){
 					continue;

@@ -24,6 +24,7 @@ void terminar(int signal)
 	estaVivo = 1;
 }
 
+/** Cierra todos los sockets a los que se conecto */
 void cerrarTodosLosSockets(std::map<std::string, int> &sockets){
 	for (std::map<std::string, int>::iterator it=sockets.begin(); it!=sockets.end(); ++it){
 		close(it->second);
@@ -31,6 +32,7 @@ void cerrarTodosLosSockets(std::map<std::string, int> &sockets){
 	sockets.clear();
 }
 
+/** Cierra el socket para esa direccion si es que existe*/
 void cerrarSocket(std::string address, std::map<std::string, int> &sockets)
 {
 	std::map<std::string,int>::iterator it = sockets.find(address);
@@ -66,6 +68,8 @@ int obtenerSocket(long id, struct socketMapper* memoriaCompartida,
 	return -1;
 }
 
+/** Procesa el mensaje de la cola, si es el aviso lo envia por el socket,
+ * sino cierra el socket que deberia cerrar */
 void procesarMensaje(mensaje msg,
 		struct socketMapper* memoriaCompartida,
 		std::map<std::string, int> &sockets,
@@ -126,6 +130,7 @@ int main(int argc, char** argv)
 	while( estaVivo == 0 )
 	{
 
+		printf("Recibio mensaje asincronico \n");
 		if( recibirMensaje(colaRecibir,&msg,sizeof(mensaje) ) == -1){
 			printf("Error recibiendo mensaje de cola \n");
 			break;

@@ -28,6 +28,7 @@ void terminar(int signal)
 	estaVivo = 1;
 }
 
+/** Modifica memoria compartida para indicarle al asincronico que clientes hay donde */
 void procesarClientesSockets(mensaje &msg, struct socketMapper* memoria,int mutex,char* address)
 {
 	tomarSem(mutex);
@@ -124,12 +125,14 @@ void handleClient(int socket, struct sockaddr_in cli)
 		}
 		recibido.clear();
 	}
+
 	tomarSem(mutex);
 	removeAddress(memoriaCompartida,address,strlen(address));
 	liberarSem(mutex);
 
 	close(socket);
 
+	//envio mensaje a asincrono para que desconecte el cliente
 	int colaAsync = obtenerCola(COLA_ASINC_CLIENTE);
 	mensaje cerrarSocket;
 	cerrarSocket.tipoMensaje = SOCKETS_ASYNC_UPDATE;
