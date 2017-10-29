@@ -33,7 +33,9 @@ void cerrarTodosLosSockets(std::map<std::string, int> &sockets){
 
 void cerrarSocket(std::string address, std::map<std::string, int> &sockets)
 {
-	if( sockets[address] != NULL ){
+	std::map<std::string,int>::iterator it = sockets.find(address);
+	if( it != sockets.end() )
+	{
 		close( sockets[address] );
 	}
 	sockets.erase(address);
@@ -51,7 +53,8 @@ int obtenerSocket(long id, struct socketMapper* memoriaCompartida,
 	std::string address = getClientAddress(memoriaCompartida, (int)id, &port);
 	liberarSem(mutex);
 
-	if( address != "" && sockets[address] != NULL ){
+	std::map<std::string,int>::iterator it = sockets.find(address);
+	if( address != "" && it != sockets.end() ){
 		return sockets[address];
 	} else {
 		int socket;

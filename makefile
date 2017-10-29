@@ -15,9 +15,12 @@ MOM_OBJS= $(subst .cpp,.o,$(MOM_SRCS))
 
 COMMONN_OBJS= $(subst .cpp,.o,$(COMMON_SRCS))
 
-all: init destroy client cine mom idGiver clientSocket cineSocket cineSocketAsync clientSocketAsync
+all: checkBuild init destroy client cine mom idGiver clientSocket cineSocket cineSocketAsync clientSocketAsync
 	if [ ! -d ./build/ ]; then mkdir ./build/; fi
 	mv *.o ./build/
+	
+checkBuild : 
+	if [ -d ./build/ ]; then mv ./build/*.o ./; fi
 #--------
 init: inicializador.o cola.o semaforo.o memoriacompartida.o cineAsyncHandler.o
 	$(CC) $(DEBUG) -o init inicializador.o cola.o semaforo.o memoriacompartida.o cineAsyncHandler.o
