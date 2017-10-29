@@ -8,4 +8,8 @@ client
 init
 destroy
 mom
+cineSocket
+cineSocketAsync
+clientSocket
+clientSocketAsync
 *.zip
