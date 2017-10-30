@@ -13,4 +13,7 @@ cineSocketAsync
 clientSocket
 clientSocketAsync
 idGiver
+T
+sendLoging
+sensAsyncs
 *.zip
