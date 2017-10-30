@@ -117,13 +117,15 @@ int main(int argc, char** argv)
 		ponerAlarma(TIME_OUT_CONNECTION);
 		if( ( totalRead = leerSocketHasta(socket,buffer,BUFF_SIZE,'\0',endLine)) == -1 ){
 			bool alarm = errno == EINTR && vivo == 0;
-			perror("No pudo leer del socket: ");
 			aEnviar = recibido;
 			aEnviar.resultado = RESULTADOERROR;
 			enviarMensaje(colaEnvio,(void*)&aEnviar,sizeof(mensaje));
-			perror("Envio mensaje\n ");
-			if( alarm ) continue;
-			else break;
+			printf("Envio mensaje error\n");
+			if( alarm ){ continue; }
+			else{
+				perror("No pudo leer del socket: ");
+				break;
+			}
 		}
 		cancelarAlarma();
 

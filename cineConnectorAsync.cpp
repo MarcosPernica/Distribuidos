@@ -60,6 +60,7 @@ int obtenerSocket(long id, struct socketMapper* memoriaCompartida,
 		return sockets[address];
 	} else {
 		int socket;
+		printf("Intentando conexion a %s, %i",address.c_str(),port);
 		if( (socket = crearSocketCliente(address, port)) != -1 ){
 			sockets[address] = socket;
 			return socket;
@@ -129,13 +130,12 @@ int main(int argc, char** argv)
 	mensaje msg;
 	while( estaVivo == 0 )
 	{
-
-		printf("Recibio mensaje asincronico \n");
+		printf("Esperando mensaje asincronico \n");
 		if( recibirMensaje(colaRecibir,&msg,sizeof(mensaje) ) == -1){
 			printf("Error recibiendo mensaje de cola \n");
 			break;
 		}
-
+		printf("Recibio mensaje asincronico \n");
 		procesarMensaje(msg,memoriaCompartida, sockets, mutex);
 	}
 

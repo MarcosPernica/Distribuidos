@@ -7,9 +7,13 @@
 #include "stdlib.h"
 
 void tryCreateCola(int id){
-	if ( crearCola(id) == -1 ){
+	int colaId = -1;
+	if ( (colaId = crearCola(id)) == -1 ){
 		printf("Error al crear cola %d\n",id);
 		exit(1);
+	} else
+	{
+		printf("Cola %i tiene id %i\n",id,colaId);
 	}
 }
 

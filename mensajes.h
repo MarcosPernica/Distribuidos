@@ -64,8 +64,8 @@ struct mominit {
 struct mensaje{
 	long mtype;
 	int tipoMensaje;
-	char resultado;
-	int fd;
+	char resultado = RESULTADOOK;
+	int fd = -1;
 	union {
 		struct login l; //Corresponde a LOGIN.
 		struct loginResponse lresponse; //Corresponde a LOGIN_RESPONSE.

@@ -35,7 +35,8 @@ void procesarClientesSockets(mensaje &msg, struct socketMapper* memoria,int mute
 	switch(msg.tipoMensaje)
 	{
 	case LOGIN:
-		addClient(memoria,address, strlen(address), msg.mtype);
+		printf("agrego cliente %i a %s\n",msg.l.id, address);
+		addClient(memoria,address, strlen(address), msg.l.id);
 		break;
 	case SALIR_SALA:
 		removeClient(memoria,address, strlen(address), msg.mtype);
@@ -75,7 +76,7 @@ void handleClient(int socket, struct sockaddr_in cli)
 	addAddress(memoriaCompartida,address,strlen(address),CLIENT_PORT);
 	liberarSem(mutex);
 
-	cli.sin_addr;
+
 	char buffer[BUFF_SIZE];
 	std::string recibido;
 	mensaje aEnviar;
@@ -94,6 +95,7 @@ void handleClient(int socket, struct sockaddr_in cli)
 
 		//copio stream al string recibido
 		recibido = std::string(buffer,lastEnd);
+		printf("Por deserializar %s\n", recibido.c_str());
 		desserializar( recibido, aEnviar );
 		printf("%i. Deserializo %s\n", getpid(), recibido.c_str());
 		recibido.clear();
@@ -131,6 +133,7 @@ void handleClient(int socket, struct sockaddr_in cli)
 	liberarSem(mutex);
 
 	close(socket);
+	printf("Cerro socket a cliente\n");
 
 	//envio mensaje a asincrono para que desconecte el cliente
 	int colaAsync = obtenerCola(COLA_ASINC_CLIENTE);
