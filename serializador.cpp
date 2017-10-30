@@ -12,6 +12,7 @@
 #include <vector>
 #include <stdlib.h>
 #include <iostream>
+#include <stdio.h>
 
 
 
@@ -138,7 +139,7 @@ static std::vector<std::string> cortarString(const std::string &serial)
 {
 	std::vector<std::string> partes;
 	unsigned int a=0, i;
-	
+
 	for(i = 0; i<serial.length(); i++)
 	{
 		if(serial.at(i) == SEPARADOR)
@@ -148,8 +149,16 @@ static std::vector<std::string> cortarString(const std::string &serial)
 		}		
 	}
 
+
 	if(a < i)
+	{
 		partes.push_back(serial.substr(a));
+	} else if( serial.at(serial.length() -1 ) == SEPARADOR )
+	{
+		partes.push_back("");
+	}
+
+
 
 	return partes;
 }
@@ -182,7 +191,6 @@ static bool desserializarInformacionSala(struct sala &informacionSala, std::vect
 bool desserializar(std::string &serializado, mensaje &desserializado, bool peticion)
 {
 	std::vector<std::string> valores = cortarString(serializado);
-	
 	desserializado.mtype = aLong(valores[0]);
 	desserializado.tipoMensaje = aLong(valores[1]);
 	desserializado.resultado = (char)aLong(valores[2]);
