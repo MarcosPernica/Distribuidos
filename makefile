@@ -12,6 +12,7 @@ MOM_SRCS= $(COMMON_SRCS) clienteAsinc.cpp mom.cpp mom_run.cpp paramsParser.cpp
 CINE_OBJS=$(subst .cpp,.o,$(CINE_SRCS))
 CLIENT_OBJS= $(subst .cpp,.o,$(CLIENT_SRCS))
 MOM_OBJS= $(subst .cpp,.o,$(MOM_SRCS))
+TEST_OBJS= $(subst .cpp,.o, cola.cpp entidades.cpp )
 
 COMMONN_OBJS= $(subst .cpp,.o,$(COMMON_SRCS))
 
@@ -59,6 +60,15 @@ cineSocketAsync: $(COMMONN_OBJS) cineConnectorAsync.o paramsParser.o cineAsyncHa
 clientSocketAsync: $(COMMONN_OBJS) clientConnectorAsync.o paramsParser.o
 	$(CC) $(DEBUG) -o clientSocketAsync $(COMMONN_OBJS) clientConnectorAsync.o paramsParser.o
 
+tests: $(TEST_OBJS) makeLogins.o makeAsincs.o
+	$(CC) $(DEBUG) -o sendLoging $(TEST_OBJS) makeLogins.o
+	$(CC) $(DEBUG) -o sendAsinc $(TEST_OBJS) makeAsincs.o
+
+makeAsincs.o: common.h mensajes.h entidades.h ipc/cola.h 
+	$(CC) $(DEBUG) -c test/makeAsincs.cpp
+
+makeLogins.o: common.h mensajes.h entidades.h ipc/cola.h
+	$(CC) $(DEBUG) -c test/makeLogins.cpp
 
 #--CINE---
 cine.o: cine.cpp cinehijo.h $(COMMON_DEPENDENCIES) baseDeDatos/baseDeDatos.h administrador.h

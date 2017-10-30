@@ -128,9 +128,9 @@ int leerSocketHasta(int fd, char* buffer, int maxLen, char endLine, int &firstEn
 		if( firstEndLine != -1 ){
 			break;
 		}
-		printf("Len read %i\n",len);
-	}while ( len > 0 && totalLen < maxLen );
 
+	}while ( len > 0 && totalLen < maxLen );
+	printf("Len read %i\n",len);
 	if( len <= 0 ){
 		return -1;
 	}
