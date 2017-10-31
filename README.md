@@ -3,10 +3,14 @@
   - `make all` para compilar los ejectuables
   - `./init` para inicializar las colas
   - `./cine` para correr el cine
-  - `./mom` para correr el mom
+  - `./mom <ip> <puerto>` para correr el mom
   - `./client` para correl el client
+  - `./cineSocket <puerto>` para correr el server del cine
+  - `./cineSocketAsync` para correr el administrador de actualizaciones
+  - `./clientSocket <ip> <puerto>` para correr la conexion cliente al cine
+  - `./clientSocketAsync` para correr el servidor de actualizaciones
   - Se pueden frenar tanto el MOM como el cine con `Ctrl-C`
-  - Si ocurrio un problema indeseado correr `./destroy` para eliminar las colas  
+  - Si ocurrio un problema indeseado correr `./destroy` o `ipcrm -a` para eliminar las colas 
   
 ## TP1
 
@@ -56,7 +60,7 @@ Toda la comunicacion entre procesos es por colas, memoria compartida y/o semafor
 
 ## TP3
 
-## Enunciado
+### Enunciado
   Manteniendo los enunciados anteriores posibilitar el acceso al cine desde maquinas distintas
   posibilitando que varios clientes de distintas maquinas se conecten al mismo cine por la red.
 	
@@ -64,11 +68,12 @@ Toda la comunicacion entre procesos es por colas, memoria compartida y/o semafor
   Se crearon 4 procesos para manejar las conexiones entre el cine y los clientes. En la maquina cliente habra
   un socket cliente que conectara al cine y enviara todos los mensajes que reciba de la cola login y de cine. 
   La administracion de los mensajes sera secuencial, si varios clientes interactuan a la vez desde una sola maquina
-  cada mensaje enviado se enviara y respondera de forma secuencial. Tambien habra un sokcet servidor para que el cine
+  cada mensaje enviado se enviara y respondera de forma secuencial. Tambien habra un sokcet servidor para que el cine 
   se conecte a este para enviar las actualizaciones.
-  En paralelo el cine tendra un socket servidor que forkea cada conexion recibida para manejar los mensajes recibidos y meterlos
-  en las colas de login o cine segun corresponda. Tambien tendra un proceso que maneja las conexiones a los clientes para enviar las   
-  actualizaciones de forma secuencial, es decir, si recibe las actualizcaciones para los clientes 3,4,5 enviara un mensaje tras otro.
+  En paralelo el cine tendra un socket servidor que forkea cada conexion recibida para manejar los mensajes recibidos y 
+  meterlos  en las colas de login o cine segun corresponda. Tambien tendra un proceso que maneja las conexiones a los
+  clientes para enviar las actualizaciones de forma secuencial, es decir, si recibe las actualizcaciones para los clientes 
+  3,4,5 enviara un mensaje tras otro.
 
   Se agrego un proceso mas para administrar los id de los clientes que al recibir una conexion envia un id nuevo y se desconecta.
 
