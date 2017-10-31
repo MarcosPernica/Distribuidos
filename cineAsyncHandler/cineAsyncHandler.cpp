@@ -17,6 +17,7 @@ int addresIn(struct socketMapper * map, char* address, int addressLen)
 int clientIn(struct addressMap *toSwap, int client)
 {
 	for( int i = 0; i < toSwap->amountClients; i++){
+		printf("Client  %i\n", toSwap->clients[i]);
 		if( client == toSwap->clients[i] ){
 			return i;
 		}
@@ -27,8 +28,9 @@ int clientIn(struct addressMap *toSwap, int client)
 bool addAddress(struct socketMapper * map, char* address, int addressLen, int port){
 	if( addresIn(map, address, addressLen) == -1)
 	{
+		printf("Se agrego la address %s\n",address);
 		struct addressMap addressmap;
-		memcpy(addressmap.address, address, addressLen);
+		strcpy(addressmap.address, address);
 		addressmap.port = port;
 		map->addresses[map->amountAddress] = addressmap;
 		map->amountAddress++;
@@ -56,6 +58,7 @@ bool addClient(struct socketMapper * map,char* address, int addressLen, int clie
 	{
 		struct addressMap toSwap = map->addresses[index];
 		if( clientIn(&toSwap,client) == -1 ){
+			printf("Se agrego el cliente %i a la addess %s\n",client,address);
 			toSwap.clients[toSwap.amountClients] = client;
 			toSwap.amountClients++;
 			map->addresses[index] = toSwap;

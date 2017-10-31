@@ -84,6 +84,7 @@ void handleClient(int socket, struct sockaddr_in cli)
 	int lastEnd = -1;
 	int totalRead = -1;
 	int unusedBufferLength = 0;
+	int idToWait = 0;
 	while( estaVivo == 0 )
 	{
 		printf("%i. Esperando lectura de socket\n", getpid());
@@ -111,7 +112,8 @@ void handleClient(int socket, struct sockaddr_in cli)
 		}
 
 		printf("%i. Recibir respuesta de cola\n", getpid());
-		if ( recibirMensaje(colaRecibirDeCine,aEnviar.mtype,(void*)&aRecibir,sizeof(mensaje)) == -1)
+		idToWait = aEnviar.tipoMensaje == LOGIN ? aEnviar.l.id : aEnviar.mtype;
+		if ( recibirMensaje(colaRecibirDeCine,idToWait,(void*)&aRecibir,sizeof(mensaje)) == -1)
 		{
 			perror("No pudo recibir mensaje de la cola ");
 			break;
