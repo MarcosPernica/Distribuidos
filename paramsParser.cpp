@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <regex.h>
 #include <string>
+#include <string.h>
 
 bool parseIp(char* argv, char* ip)
 {
@@ -35,6 +36,7 @@ bool parseIp(char* argv, char* ip)
 	}
 
 	regfree(&regex);
+	memcpy(ip,argv,strlen(argv));
 	return boolResult;
 }
 

@@ -86,10 +86,10 @@ int MOMInitClient(MOM &mom, int ID, std::string &server, int port)
 	//Obtiene la cola de identificacion con el cine
 	MOMClient api;
 	//Crea la memoria compartida y el mutex para accederla.
-	if ((api.idMemoriaCompartida = cmpMemCrear(sizeof(struct sala), ID)) < 0)
+	if ((api.idMemoriaCompartida = cmpMemCrear(sizeof(struct sala), clientId)) < 0)
 		return -1;
 
-	if ((api.mutexMemoriaCompartida = crearSem(ID, 1)) == -1 )
+	if ((api.mutexMemoriaCompartida = crearSem(clientId, 1)) == -1 )
 		return -1;
 
 	api.memoriaCompartida = (struct sala*)cmpMemObtenerMemoria(api.idMemoriaCompartida);
@@ -97,7 +97,8 @@ int MOMInitClient(MOM &mom, int ID, std::string &server, int port)
 
 	//Lanza el proceso asincrono que va a tomar los datos de actualizacion.
 	api.pidAsincrono = fork();
-	if ( api.pidAsincrono == 0){
+	if ( api.pidAsincrono == 0 )
+	{
 		correrAsincronico(clientId);
 		exit(0);
 	}
